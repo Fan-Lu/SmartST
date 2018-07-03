@@ -127,11 +127,11 @@ optimizer = optim.Adam(stnet.parameters(), lr=1e-3, betas=(0.9, 0.999), eps=1e-8
 if __name__ == '__main__':
     save_loss = []
     # c_input, p_input, t_input, e_input
-    ground_truth = Variable(torch.randn(3, 2, 100, 100)).cuda()
-    c_input = Variable(torch.randn(3, 6, 100, 100)).cuda()
-    p_input = Variable(torch.randn(3, 6, 100, 100)).cuda()
-    t_input = Variable(torch.randn(3, 6, 100, 100)).cuda()
-    e_input = Variable(torch.randn(3, 2, 100, 100)).cuda() # uncertain variable
+    ground_truth = Variable(torch.randn(3, 2, 10, 10)).cuda()
+    c_input = Variable(torch.randn(3, 6, 10, 10)).cuda()
+    p_input = Variable(torch.randn(3, 6, 10, 10)).cuda()
+    t_input = Variable(torch.randn(3, 6, 10, 10)).cuda()
+    e_input = Variable(torch.randn(3, 2, 10, 10)).cuda() # uncertain variable
     for i in range(10):
         input = (c_input, p_input, t_input, e_input)
         main_output = stnet(input)
@@ -139,6 +139,9 @@ if __name__ == '__main__':
         loss = criterion(main_output, ground_truth)
         loss.backward()
         optimizer.step()
-        save_loss.append(loss)
+        save_loss.append(loss.cpu().data.numpy())
+        print(i)
+    plt.switch_backend('agg')
     plt.plot(save_loss)
-    plt.show()
+    # plt.show()
+    plt.savefig('{}{}'.format('/mnt/data/fan/SmartST', 'loss'))
