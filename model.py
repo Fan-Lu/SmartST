@@ -19,7 +19,6 @@ class STResNet(nn.Module):
         self.external_dim = external_dim
         self.nb_residual_unit = nb_residual_unit
 
-
         len_seq, nb_flow, map_height, map_width = c_conf
         self.c_conv1 = nn.Conv2d(in_channels=nb_flow * len_seq, out_channels=64, kernel_size=3, padding=1)
         self.c_conv2 = nn.Conv2d(in_channels=64, out_channels=nb_flow, kernel_size=3, padding=1)
@@ -101,7 +100,7 @@ class STResNet(nn.Module):
             new_outputs = []
             main_output = 0
             for output in outputs:
-                cal = iLayer(output.size(1) * output.size(2) * output.size(3)).cuda()(output)
+                cal = iLayer((output.size(1), output.size(2), output.size(3))).cuda()(output)
                 new_outputs.append(cal)
                 main_output += cal
 
@@ -127,12 +126,12 @@ optimizer = optim.Adam(stnet.parameters(), lr=1e-3, betas=(0.9, 0.999), eps=1e-8
 if __name__ == '__main__':
     save_loss = []
     # c_input, p_input, t_input, e_input
-    ground_truth = Variable(torch.randn(3, 2, 10, 10)).cuda()
-    c_input = Variable(torch.randn(3, 6, 10, 10)).cuda()
-    p_input = Variable(torch.randn(3, 6, 10, 10)).cuda()
-    t_input = Variable(torch.randn(3, 6, 10, 10)).cuda()
-    e_input = Variable(torch.randn(3, 2, 10, 10)).cuda() # uncertain variable
-    for i in range(10):
+    ground_truth = Variable(torch.randn(1, 2, 100, 100)).cuda()
+    c_input = Variable(torch.randn(1, 6, 100, 100)).cuda()
+    p_input = Variable(torch.randn(1, 6, 100, 100)).cuda()
+    t_input = Variable(torch.randn(1, 6, 100, 100)).cuda()
+    e_input = Variable(torch.randn(1, 2, 100, 100)).cuda() # uncertain variable
+    for i in range(1000):
         input = (c_input, p_input, t_input, e_input)
         main_output = stnet(input)
         optimizer.zero_grad()
@@ -141,7 +140,7 @@ if __name__ == '__main__':
         optimizer.step()
         save_loss.append(loss.cpu().data.numpy())
         print(i)
-    plt.switch_backend('agg')
+    # plt.switch_backend('agg')
     plt.plot(save_loss)
-    # plt.show()
-    plt.savefig('{}{}'.format('/mnt/data/fan/SmartST', 'loss'))
+    plt.show()
+    # plt.savefig('{}{}'.format('/mnt/data/fan/SmartST', 'loss'))
