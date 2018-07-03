@@ -126,11 +126,11 @@ optimizer = optim.Adam(stnet.parameters(), lr=1e-3, betas=(0.9, 0.999), eps=1e-8
 if __name__ == '__main__':
     save_loss = []
     # c_input, p_input, t_input, e_input
-    ground_truth = Variable(torch.randn(1, 2, 100, 100)).cuda()
-    c_input = Variable(torch.randn(1, 6, 100, 100)).cuda()
-    p_input = Variable(torch.randn(1, 6, 100, 100)).cuda()
-    t_input = Variable(torch.randn(1, 6, 100, 100)).cuda()
-    e_input = Variable(torch.randn(1, 2, 100, 100)).cuda() # uncertain variable
+    ground_truth = Variable(torch.randn(3, 2, 200, 200)).cuda()
+    c_input = Variable(torch.randn(3, 6, 200, 200)).cuda()
+    p_input = Variable(torch.randn(3, 6, 200, 200)).cuda()
+    t_input = Variable(torch.randn(3, 6, 200, 200)).cuda()
+    e_input = Variable(torch.randn(3, 2, 200, 200)).cuda() # uncertain variable
     for i in range(1000):
         input = (c_input, p_input, t_input, e_input)
         main_output = stnet(input)
