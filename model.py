@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import torch.optim as optim
+import matplotlib.pyplot as plt
 
 
 class STResNet(nn.Module):
@@ -41,9 +42,9 @@ class STResNet(nn.Module):
     def _bn_relu_conv(self, nb_filter, ns_filter, bn=False):
         def f(input):
             if bn:
-                input = nn.BatchNorm2d(input.size(1), affine=False)(input)
+                input = nn.BatchNorm2d(input.size(1), affine=False).cuda()(input)
             activation = F.relu(input)
-            return  nn.Conv2d(in_channels=input.size(1), out_channels=nb_filter, kernel_size=ns_filter, padding=1)(activation)
+            return  nn.Conv2d(in_channels=input.size(1), out_channels=nb_filter, kernel_size=ns_filter, padding=1).cuda()(activation)
         return f
 
     def _residual_unit(self, nb_filter):
@@ -100,15 +101,15 @@ class STResNet(nn.Module):
             new_outputs = []
             main_output = 0
             for output in outputs:
-                cal = iLayer(output.size(1) * output.size(2) * output.size(3))(output)
+                cal = iLayer(output.size(1) * output.size(2) * output.size(3)).cuda()(output)
                 new_outputs.append(cal)
                 main_output += cal
 
         if self.external_dim != None and self.external_dim > 0:
             # external input
             main_inputs.append(e_input)
-            embedding = F.relu(nn.Linear(in_features=e_input.size(1), out_features=10)(e_input))
-            h1 = F.relu(nn.Linear(in_features=10, out_features=self.nb_flow * self.map_height * self.map_width)(embedding))
+            embedding = F.relu(nn.Linear(in_features=e_input.size(1), out_features=10).cuda()(e_input))
+            h1 = F.relu(nn.Linear(in_features=10, out_features=self.nb_flow * self.map_height * self.map_width).cuda()(embedding))
             e_output = h1.view(-1, self.nb_flow, self.map_height, self.map_width)
             main_output += e_output
         else:
@@ -118,30 +119,26 @@ class STResNet(nn.Module):
 
         return main_output
 
-stnet = STResNet(external_dim=-1)
+stnet = STResNet(external_dim=-1).cuda()
 criterion = nn.MSELoss()
 optimizer = optim.Adam(stnet.parameters(), lr=1e-3, betas=(0.9, 0.999), eps=1e-8)
 
 
 if __name__ == '__main__':
+    save_loss = []
     # c_input, p_input, t_input, e_input
-    ground_truth = Variable(torch.randn(3, 2, 100, 100))
-    c_input = Variable(torch.randn(3, 6, 100, 100))
-    p_input = Variable(torch.randn(3, 6, 100, 100))
-    t_input = Variable(torch.randn(3, 6, 100, 100))
-    e_input = Variable(torch.randn(3, 2, 100, 100)) # uncertain variable
-    input = (c_input, p_input, t_input, e_input)
-    main_output = stnet(input)
-    optimizer.zero_grad()
-    loss = criterion(main_output, ground_truth)
-    loss.backward()
-    optimizer.step()
-    print(loss)
-    print(main_output)
-
-
-
-
-
-
-
+    ground_truth = Variable(torch.randn(3, 2, 100, 100)).cuda()
+    c_input = Variable(torch.randn(3, 6, 100, 100)).cuda()
+    p_input = Variable(torch.randn(3, 6, 100, 100)).cuda()
+    t_input = Variable(torch.randn(3, 6, 100, 100)).cuda()
+    e_input = Variable(torch.randn(3, 2, 100, 100)).cuda() # uncertain variable
+    for i in range(10):
+        input = (c_input, p_input, t_input, e_input)
+        main_output = stnet(input)
+        optimizer.zero_grad()
+        loss = criterion(main_output, ground_truth)
+        loss.backward()
+        optimizer.step()
+        save_loss.append(loss)
+    plt.plot(save_loss)
+    plt.show()
