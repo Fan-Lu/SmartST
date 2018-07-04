@@ -65,7 +65,7 @@ def get_week(n):
     :return: int
     """
     base_date = 2 # Tuesday
-    return base_date+int(n//config.time)
+    return base_date+int(n//config.time)//7
 
 if __name__ == '__main__':
 
