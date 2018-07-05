@@ -20,7 +20,7 @@ if __name__ == '__main__':
         path = pa_path + name1 + str(i)+'(normalized).npy'
         temp_data = np.concatenate((temp_data, np.load(path)), axis=0)
     print("number of data is: "+str(np.shape(temp_data)[0]))
-    assert np.shape(temp_data)[0] == num_file*config.time+6, "Not reasonable data!!!"
+    assert np.shape(temp_data)[0] == num_file*config.time, "Not reasonable data!!!"
 
     intervals = config.intervals # [1 day,20 min,143(label)]
 
