@@ -1,6 +1,5 @@
 
 import numpy as np
-import os
 import Config as config
 
 
@@ -68,7 +67,7 @@ def get_week(n):
     """
     base_date = 2 # Tuesday
 
-    return base_date+int(n // config.time)%7
+    return (base_date+int(n//config.time))%7
 
 
 
