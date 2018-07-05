@@ -2,7 +2,7 @@ import os
 import numpy as np
 import time
 
-file_dir = "didi_data"
+file_dir = "di_data"
 
 '''
 due to the reasons of storage. All file in processed separately.  This will cause all the data lose
@@ -19,9 +19,9 @@ def preprocess(file_dir):
 def get_files(dir):
     result = []
     data_files = [os.path.join(dir, name) for name in os.listdir(dir)]
-    for file in data_files:
-        if os.path.isfile(file) and file.endswith(".txt"):
-            result.append(file)
+    for files in data_files:
+        if os.path.isfile(files) and files.endswith(".txt"):
+            result.append(files)
     return result
 
 
@@ -35,12 +35,12 @@ def wishdata(file_list):
         print(file[-12:-4])
         tmp_time_begin = file[-12:-8] + '-' + file[-8:-6] + '-' + file[-6:-4] + ' 00:00:00'
         tmp_time_end = file[-12:-8] + '-' + file[-8:-6] + '-' + file[-6:-4] + ' 23:59:59'
-        begin_time = datetime(tmp_time_begin)
-        end_time = datetime(tmp_time_end)
+        begin_time = datetime(tmp_time_begin) - 43200 # dong ling shi -46800
+        end_time = datetime(tmp_time_end) - 43200 # xia ling shi -43200
         print("begin time: ", begin_time)
         print("end time: ", end_time)
         rator = Generator(min_time=begin_time, max_time=end_time, min_longitude=104.04210, min_latitude=30.65282,
-                          interval=50, time_interval=30)
+                          interval=50, time_interval=600)
         print(rator.data_array.shape)
         rator.main_one_file(file)
 
@@ -78,7 +78,7 @@ class Generator:
             return [0, 0, 0, 0, 0]
 
     def wrong(self, context):
-        if (context[2]>=0 and context[2]<=self.calcu) and (context[3]>=0 and context[3<self.block[0]]) and (context[4]>=0 and context[4]<self.block[1]):
+        if (context[2]>=0 and context[2]<self.calcu) and (context[3]>=0 and context[3]<self.block[0]) and (context[4]>=0 and context[4]<self.block[1]):
             return False
         else:
             return True
@@ -113,8 +113,9 @@ class Generator:
         print('The number of ', file[-12:-4], ' trajectory we have calculated is: ', self.counter)
         np.save(file[-12:-4], self.data_array)
 
-
 preprocess(file_dir)
+
+
 
 
 
