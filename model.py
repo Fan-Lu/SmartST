@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 
 class STResNet(nn.Module):
-    def __init__(self, c_conf=(3, 2, 32, 32), p_conf=(3, 2, 32, 32), t_conf=(3, 2, 32, 32), external_dim=8, nb_residual_unit=3):
+    def __init__(self, c_conf=(2, 2, 32, 32), p_conf=(2, 2, 32, 32), t_conf=(2, 2, 32, 32), external_dim=8, nb_residual_unit=3):
         super(STResNet, self).__init__()
         '''
         C - Temporal Closeness
@@ -27,9 +27,9 @@ class STResNet(nn.Module):
         self.p_conv1 = nn.Conv2d(in_channels=nb_flow * len_seq, out_channels=64, kernel_size=3, padding=1)
         self.p_conv2 = nn.Conv2d(in_channels=64, out_channels=nb_flow, kernel_size=3, padding=1)
 
-        len_seq, nb_flow, map_height, map_width = t_conf
-        self.t_conv1 = nn.Conv2d(in_channels=nb_flow * len_seq, out_channels=64, kernel_size=3, padding=1)
-        self.t_conv2 = nn.Conv2d(in_channels=64, out_channels=nb_flow, kernel_size=3, padding=1)
+        # len_seq, nb_flow, map_height, map_width = t_conf
+        # self.t_conv1 = nn.Conv2d(in_channels=nb_flow * len_seq, out_channels=64, kernel_size=3, padding=1)
+        # self.t_conv2 = nn.Conv2d(in_channels=64, out_channels=nb_flow, kernel_size=3, padding=1)
 
         self.nb_flow = nb_flow
         self.map_height = map_height
@@ -85,12 +85,12 @@ class STResNet(nn.Module):
         outputs.append(p_conv2)
         #########t#########
         # conv1
-        t_conv1 = self.t_conv1(t_input)
-        t_residual_output = self.ResUnits(self._residual_unit, nb_filter=64, repetations=self.nb_residual_unit)(t_conv1)
-        # conv2
-        t_activation = F.relu(t_residual_output)
-        t_conv2 = self.c_conv2(t_activation)
-        outputs.append(t_conv2)
+        # t_conv1 = self.t_conv1(t_input)
+        # t_residual_output = self.ResUnits(self._residual_unit, nb_filter=64, repetations=self.nb_residual_unit)(t_conv1)
+        # # conv2
+        # t_activation = F.relu(t_residual_output)
+        # t_conv2 = self.c_conv2(t_activation)
+        # outputs.append(t_conv2)
 
         # parameter-matrix-based fusion
         if len(outputs) == 1:
@@ -111,8 +111,10 @@ class STResNet(nn.Module):
             h1 = F.relu(nn.Linear(in_features=10, out_features=self.nb_flow * self.map_height * self.map_width).cuda()(embedding))
             e_output = h1.view(-1, self.nb_flow, self.map_height, self.map_width)
             main_output += e_output
-        else:
-            print('external_dim:', self.external_dim)
+        # TODO: Add External Info
+        # else:
+            # print('external_dim:', self.external_dim)
+
 
         main_output = F.tanh(main_output)
 
@@ -127,12 +129,12 @@ if __name__ == '__main__':
     save_loss = []
     # c_input, p_input, t_input, e_input
     ground_truth = Variable(torch.randn(3, 2, 200, 200)).cuda()
-    c_input = Variable(torch.randn(3, 6, 200, 200)).cuda()
-    p_input = Variable(torch.randn(3, 6, 200, 200)).cuda()
-    t_input = Variable(torch.randn(3, 6, 200, 200)).cuda()
+    c_input = Variable(torch.randn(3, 4, 200, 200)).cuda()
+    p_input = Variable(torch.randn(3, 4, 200, 200)).cuda()
+    # t_input = Variable(torch.randn(3, 6, 200, 200)).cuda()
     e_input = Variable(torch.randn(3, 2, 200, 200)).cuda() # uncertain variable
     for i in range(1000):
-        input = (c_input, p_input, t_input, e_input)
+        input = (c_input, p_input, None, e_input)
         main_output = stnet(input)
         optimizer.zero_grad()
         loss = criterion(main_output, ground_truth)

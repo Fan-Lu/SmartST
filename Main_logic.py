@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     #### load original data
     pa_path = os.path.abspath(os.path.join(os.path.dirname(__file__),os.path.pardir)) # get last state file name
-    name1 = '/data/data(normalized)/'
+    name1 = '/SmartST/data/data(normalized)/'
     name_start = 20161101
     num_file = 30
     path1 = pa_path + name1 + str(name_start)+'(normalized).npy'
@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     #### apply data_loader to pre-process data that fit to our network
     # use for test
-    processed_data = data_loader(temp_data,intervals) # (4182,),c:(200, 200, 4),p:(200, 200, 4),l:(200, 200, 2)
+    processed_data = data_loader(temp_data,intervals) # (4176,),c:(200, 200, 4),p:(200, 200, 4),l:(200, 200, 2)
 
     #### could be deleted
     # print(np.shape(processed_data[0].close),np.shape(processed_data[0].period),np.shape(processed_data[0].label))
