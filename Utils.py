@@ -54,11 +54,15 @@ def data_loader(data, interval):
 
 def create_train_test(data):
     """
-    This function will seperate data into training and test datset
-    :param data:
-    :return:
+    This function will separate data into training(0.9) and test(0.1) data-set
+    :param data: list[object]
+    :return: list[object],list[object]
     """
-    # todo
+    num_data = len(data)
+    np.random.shuffle(data)
+    train_data = data[0:int(0.9*num_data)]
+    test_data = data[int(0.9*num_data):]
+    return train_data, test_data
 
 def get_week(n):
     """
