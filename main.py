@@ -15,6 +15,8 @@ import torchvision
 from PIL import Image
 
 parser = argparse.ArgumentParser(description='SmartST')
+# parser.add_argument('--model-dir', metavar='DIR', help='path to data', default='/mnt/data//fan/SmartST/model_saved/')
+# parser.add_argument('--result-dir', metavar='DIR', help='path to data', default='/mnt/data//fan/SmartST/result_saved/')
 parser.add_argument('--model-dir', metavar='DIR', help='path to data', default='/home/exx/Lab/SmartST/model_saved/')
 parser.add_argument('--result-dir', metavar='DIR', help='path to data', default='/home/exx/Lab/SmartST/result_saved/')
 parser.add_argument('--use-plt', default=False, type=bool, help='plot figure')
@@ -32,7 +34,7 @@ if __name__ == '__main__':
     pa_path = os.path.abspath(os.path.join(os.path.dirname(__file__),os.path.pardir)) # get last state file name
     name1 = '/SmartST/data/data(normalized)/'
     name_start = 20161101
-    num_file = 2
+    num_file = 30
     path1 = pa_path + name1 + str(name_start)+'(normalized).npy'
     temp_data = np.load(path1)
     print("loading " + str(name_start) + "th file!")
@@ -49,10 +51,12 @@ if __name__ == '__main__':
     # use for test
     processed_data = data_loader(temp_data,intervals) # (4176,),c:(200, 200, 4),p:(200, 200, 4),l:(200, 200, 2)
     all_size = processed_data.__len__()
+    iter_size = int(all_size/args.batch_size)
+    save_loss = []
     for epoch in range(100):
-        save_loss = []
         sample_index = np.random.shuffle(processed_data)
-        for i in range(int(all_size/args.batch_size)):
+        move_loss = 0
+        for i in range(iter_size):
             # sample_index = np.random.shuffle(processed_data)
             batch_memory = np.array(processed_data)[i*args.batch_size:(i+1)*args.batch_size]
 
@@ -66,9 +70,10 @@ if __name__ == '__main__':
             loss = criterion(main_output, l_input)
             loss.backward()
             optimizer.step()
-            save_loss.append(loss.cpu().data.numpy()[0])
-            print('epoch: 100/{}, iter: 4176/{}, loss: {}'.format(epoch, i, loss.cpu().data.numpy()[0]))
-
+            move_loss += loss.cpu().data.numpy()[0]
+            # save_loss.append(loss.cpu().data.numpy()[0])
+            print('epoch: 100/{}, iter: {}/{}, loss: {}'.format(epoch+1, iter_size, i+1, move_loss/(i+1)))
+        save_loss.append(move_loss/iter_size)
         if (epoch) % 20 == 0:
             if not os.path.exists(args.model_dir):
                 os.mkdir(args.model_dir)
