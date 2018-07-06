@@ -9,6 +9,7 @@ import torch
 from torch.autograd import Variable
 import argparse
 import matplotlib.pyplot as plt
+import gc
 
 parser = argparse.ArgumentParser(description='SmartST')
 parser.add_argument('--model-dir', metavar='DIR', help='path to data', default='/home/exx/Lab/SmartST/model_saved/')
@@ -43,13 +44,36 @@ if __name__ == '__main__':
     # use for test
     processed_data = data_loader(temp_data,intervals) # (4176,),c:(200, 200, 4),p:(200, 200, 4),l:(200, 200, 2)
 
+    '''
+    extract batch training set
+    '''
+    # # choose training sample randomly
+    # A. choose batch each time randomly (may choose repeated)
+    data_set_size = len(processed_data)
+    sample_index = np.random.choice(data_set_size, size=config.batch_size)
+    batch_memory = np.array(processed_data)[sample_index]
+    # del processed_data
+    # gc.collect()
+    # B. shuffle then choose sequentially
+    # todo
+
+    c_input = Variable(
+        torch.from_numpy(np.array([memory_unit.period for memory_unit in batch_memory]))).view(-1, 4, 200, 200).float().cuda()  # close
+    p_input = Variable(
+        torch.from_numpy(np.array([memory_unit.period for memory_unit in batch_memory]))).view(-1, 4, 200, 200).float().cuda()    # period
+    l_input = Variable(
+        torch.from_numpy(np.array([memory_unit.label for memory_unit in batch_memory]))).view(-1, 4, 200, 200).float().cuda()     # label
+    '''
+    end
+    '''
+
     for epoch in range(100):
         save_loss = []
         for i in range(4176):
-            c_input, l_input, p_input = processed_data[i].close, processed_data[i].label, processed_data[i].period
-            c_input = Variable(torch.from_numpy(c_input)).view(-1, 4, 200, 200).float().cuda()
-            p_input = Variable(torch.from_numpy(p_input)).view(-1, 4, 200, 200).float().cuda()
-            l_input = Variable(torch.from_numpy(l_input)).view(-1, 2, 200, 200).float().cuda()  # label
+            # c_input, l_input, p_input = processed_data[i].close, processed_data[i].label, processed_data[i].period
+            # c_input = Variable(torch.from_numpy(c_input)).view(-1, 4, 200, 200).float().cuda()
+            # p_input = Variable(torch.from_numpy(p_input)).view(-1, 4, 200, 200).float().cuda()
+            # l_input = Variable(torch.from_numpy(l_input)).view(-1, 2, 200, 200).float().cuda()  # label
 
             input = (c_input, p_input, None, None)
             main_output = stnet(input)
