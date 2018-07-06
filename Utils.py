@@ -1,19 +1,28 @@
 
 import numpy as np
 import Config as config
-
+import csv
+import os
 
 class DataUnit(object):
     """
     This class to wrap data, label together, extra factors
     """
-    def __init__(self, data_close, data_period, label, week:str):
+    def __init__(self, data_close, data_period, label, tpr, week: str):
         self.close = data_close
         self.period = data_period
         self.label = label
-        self.week = week
+        self.week = week # date in week
+        self.tpr = tpr # temperature
+        self.weather = None
 
-        # extra factor
+    def oneHot_weather(self, type_list: list, target: str):
+
+        weather_data = [0] * len(type_list)
+        weather_data[type_list.index(target)] = 1.0
+        self.weather = np.array(weather_data, dtype=float)
+
+
 
 def data_loader(data, interval):
     """
@@ -28,12 +37,16 @@ def data_loader(data, interval):
     stride = 1  # sample rate
     total_num = time - config.time # total size
     whole_data = []
-
     num_channel = 2
+
+    temperature, condition, type_list = getTemperature() # (721,1),(721,1),(9,1)
+    max_temp = max(temperature)
 
     for i in range(0, total_num, stride):
         # get label
         label = data[i+interval[2]]
+        temp_each = temperature[i//6]/max_temp
+        type_each = condition[i//6]
 
         # get closeness data
         t_data_close = interval[1]
@@ -46,7 +59,8 @@ def data_loader(data, interval):
         for j in range(i+1, i+num_channel):
             data_per = np.concatenate((data_per, data[j]), axis=2)
 
-        unit = DataUnit(data_close, data_per, label, str(get_week(i+interval[2])))
+        unit = DataUnit(data_close, data_per, label, temp_each, str(get_week(i+interval[2])))
+        unit.oneHot_weather(type_list, type_each)
         whole_data.append(unit)
 
     return whole_data
@@ -74,6 +88,24 @@ def get_week(n):
     return (base_date+int(n//config.time))%7
 
 
+def getTemperature():
+    """
+    This function is used for collect weather info.
+    :return:  list[int],list[str],list[str]
+    """
+    path = "data/weather.csv"
+    temperature, condition = [], []
+    with open(path, 'r') as file:
+        reader = csv.reader(file, delimiter=' ', quotechar='|')
+        for row in reader:
+            temperature.append(int(row[0]))
+            condition.append(row[1][3:].rstrip('.'))
+
+    type_list = []
+    for ele in condition:
+        if ele not in type_list:
+            type_list.append(ele)
+    return temperature, condition, type_list
 
 
 
