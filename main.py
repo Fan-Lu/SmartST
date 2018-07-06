@@ -9,17 +9,22 @@ import torch
 from torch.autograd import Variable
 import argparse
 import matplotlib.pyplot as plt
-import gc
+from torchvision import transforms
+from torch.utils.data import Dataset, DataLoader
+import torchvision
+from PIL import Image
 
 parser = argparse.ArgumentParser(description='SmartST')
 parser.add_argument('--model-dir', metavar='DIR', help='path to data', default='/home/exx/Lab/SmartST/model_saved/')
 parser.add_argument('--result-dir', metavar='DIR', help='path to data', default='/home/exx/Lab/SmartST/result_saved/')
 parser.add_argument('--use-plt', default=False, type=bool, help='plot figure')
+parser.add_argument('--batch-size', default=16, type=int, help='batch size default=32')
 args = parser.parse_args()
 
 stnet = STResNet(external_dim=-1).cuda()
 criterion = nn.MSELoss()
 optimizer = optim.Adam(stnet.parameters(), lr=1e-3, betas=(0.9, 0.999), eps=1e-8)
+
 
 if __name__ == '__main__':
 
@@ -27,7 +32,7 @@ if __name__ == '__main__':
     pa_path = os.path.abspath(os.path.join(os.path.dirname(__file__),os.path.pardir)) # get last state file name
     name1 = '/SmartST/data/data(normalized)/'
     name_start = 20161101
-    num_file = 30
+    num_file = 2
     path1 = pa_path + name1 + str(name_start)+'(normalized).npy'
     temp_data = np.load(path1)
     print("loading " + str(name_start) + "th file!")
@@ -43,37 +48,17 @@ if __name__ == '__main__':
     #### apply data_loader to pre-process data that fit to our network
     # use for test
     processed_data = data_loader(temp_data,intervals) # (4176,),c:(200, 200, 4),p:(200, 200, 4),l:(200, 200, 2)
-
-    '''
-    extract batch training set
-    '''
-    # # choose training sample randomly
-    # A. choose batch each time randomly (may choose repeated)
-    data_set_size = len(processed_data)
-    sample_index = np.random.choice(data_set_size, size=config.batch_size)
-    batch_memory = np.array(processed_data)[sample_index]
-    # del processed_data
-    # gc.collect()
-    # B. shuffle then choose sequentially
-    # todo
-
-    c_input = Variable(
-        torch.from_numpy(np.array([memory_unit.period for memory_unit in batch_memory]))).view(-1, 4, 200, 200).float().cuda()  # close
-    p_input = Variable(
-        torch.from_numpy(np.array([memory_unit.period for memory_unit in batch_memory]))).view(-1, 4, 200, 200).float().cuda()    # period
-    l_input = Variable(
-        torch.from_numpy(np.array([memory_unit.label for memory_unit in batch_memory]))).view(-1, 4, 200, 200).float().cuda()     # label
-    '''
-    end
-    '''
-
+    all_size = processed_data.__len__()
     for epoch in range(100):
         save_loss = []
-        for i in range(4176):
-            # c_input, l_input, p_input = processed_data[i].close, processed_data[i].label, processed_data[i].period
-            # c_input = Variable(torch.from_numpy(c_input)).view(-1, 4, 200, 200).float().cuda()
-            # p_input = Variable(torch.from_numpy(p_input)).view(-1, 4, 200, 200).float().cuda()
-            # l_input = Variable(torch.from_numpy(l_input)).view(-1, 2, 200, 200).float().cuda()  # label
+        sample_index = np.random.shuffle(processed_data)
+        for i in range(int(all_size/args.batch_size)):
+            # sample_index = np.random.shuffle(processed_data)
+            batch_memory = np.array(processed_data)[i*args.batch_size:(i+1)*args.batch_size]
+
+            c_input = Variable(torch.from_numpy(np.array([memory_unit.close for memory_unit in batch_memory]))).view(-1, 4, 200, 200).float().cuda()
+            p_input = Variable(torch.from_numpy(np.array([memory_unit.period for memory_unit in batch_memory]))).view(-1, 4, 200, 200).float().cuda()
+            l_input = Variable(torch.from_numpy(np.array([memory_unit.label for memory_unit in batch_memory]))).view(-1, 4, 200, 200).float().cuda()
 
             input = (c_input, p_input, None, None)
             main_output = stnet(input)
@@ -82,7 +67,7 @@ if __name__ == '__main__':
             loss.backward()
             optimizer.step()
             save_loss.append(loss.cpu().data.numpy()[0])
-            print('epoch: 1/{}, iter: 4176/{}, loss: {}'.format(epoch, i, loss.cpu().data.numpy()[0]))
+            print('epoch: 100/{}, iter: 4176/{}, loss: {}'.format(epoch, i, loss.cpu().data.numpy()[0]))
 
         if (epoch) % 20 == 0:
             if not os.path.exists(args.model_dir):
