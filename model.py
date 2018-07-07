@@ -31,6 +31,15 @@ class STResNet(nn.Module):
         # self.t_conv1 = nn.Conv2d(in_channels=nb_flow * len_seq, out_channels=64, kernel_size=3, padding=1)
         # self.t_conv2 = nn.Conv2d(in_channels=64, out_channels=nb_flow, kernel_size=3, padding=1)
 
+        self.linear = nn.Linear(in_features=self.external_dim, out_features= 49)
+        self.deconv1 = nn.ConvTranspose2d(in_channels=1, out_channels=4, kernel_size=5)
+        self.deconv2 = nn.ConvTranspose2d(in_channels=4, out_channels=8, kernel_size=5)
+        self.deconv3 = nn.ConvTranspose2d(in_channels=8, out_channels=8, kernel_size=3, stride=2)
+        self.deconv4 = nn.ConvTranspose2d(in_channels=8, out_channels=8, kernel_size=5, stride=2)
+        self.deconv5 = nn.ConvTranspose2d(in_channels=8, out_channels=4, kernel_size=5, stride=3)
+        self.deconv6 = nn.ConvTranspose2d(in_channels=4, out_channels=1, kernel_size=4)
+        self.relu = nn.ReLU()
+
         self.nb_flow = nb_flow
         self.map_height = map_height
         self.map_width = map_width
@@ -107,42 +116,42 @@ class STResNet(nn.Module):
         if self.external_dim != None and self.external_dim > 0:
             # external input
             main_inputs.append(e_input)
-            embedding = F.relu(nn.Linear(in_features=e_input.size(1), out_features=10).cuda()(e_input))
-            h1 = F.relu(nn.Linear(in_features=10, out_features=self.nb_flow * self.map_height * self.map_width).cuda()(embedding))
-            e_output = h1.view(-1, self.nb_flow, self.map_height, self.map_width)
-            main_output += e_output
-        # TODO: Add External Info
-        # else:
-            # print('external_dim:', self.external_dim)
 
+            e_output = self.relu(self.linear(e_input)).view(-1, 1, 7, 7)
+            e_output = self.relu(self.deconv1(e_output))
+            e_output = self.relu(self.deconv2(e_output))
+            e_output = self.relu(self.deconv3(e_output))
+            e_output = self.relu(self.deconv4(e_output))
+            e_output = self.relu(self.deconv5(e_output))
+            e_output = self.deconv6(e_output)
+
+            main_output += e_output
+        else:
+            print('external_dim:', self.external_dim)
 
         main_output = F.tanh(main_output)
 
         return main_output
 
-stnet = STResNet(external_dim=-1).cuda()
-criterion = nn.MSELoss()
-optimizer = optim.Adam(stnet.parameters(), lr=1e-3, betas=(0.9, 0.999), eps=1e-8)
-
-
 if __name__ == '__main__':
-    save_loss = []
-    # c_input, p_input, t_input, e_input
-    ground_truth = Variable(torch.randn(3, 2, 200, 200)).cuda()
-    c_input = Variable(torch.randn(3, 4, 200, 200)).cuda()
-    p_input = Variable(torch.randn(3, 4, 200, 200)).cuda()
-    # t_input = Variable(torch.randn(3, 6, 200, 200)).cuda()
-    e_input = Variable(torch.randn(3, 2, 200, 200)).cuda() # uncertain variable
-    for i in range(1000):
-        input = (c_input, p_input, None, e_input)
-        main_output = stnet(input)
-        optimizer.zero_grad()
-        loss = criterion(main_output, ground_truth)
-        loss.backward()
-        optimizer.step()
-        save_loss.append(loss.cpu().data.numpy())
-        print(i)
-    # plt.switch_backend('agg')
-    plt.plot(save_loss)
-    plt.show()
+    print(1)
+    # save_loss = []
+    # # c_input, p_input, t_input, e_input
+    # ground_truth = Variable(torch.randn(3, 2, 200, 200)).cuda()
+    # c_input = Variable(torch.randn(3, 4, 200, 200)).cuda()
+    # p_input = Variable(torch.randn(3, 4, 200, 200)).cuda()
+    # # t_input = Variable(torch.randn(3, 6, 200, 200)).cuda()
+    # e_input = Variable(torch.randn(3, 2, 200, 200)).cuda() # uncertain variable
+    # for i in range(1000):
+    #     input = (c_input, p_input, None, e_input)
+    #     main_output = stnet(input)
+    #     optimizer.zero_grad()
+    #     loss = criterion(main_output, ground_truth)
+    #     loss.backward()
+    #     optimizer.step()
+    #     save_loss.append(loss.cpu().data.numpy())
+    #     print(i)
+    # # plt.switch_backend('agg')
+    # plt.plot(save_loss)
+    # plt.show()
     # plt.savefig('{}{}'.format('/mnt/data/fan/SmartST', 'loss'))
