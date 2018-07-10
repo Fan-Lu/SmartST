@@ -20,3 +20,7 @@
                                              `=---='
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
                                    佛祖保佑       永无BUG
+
+![Testing Loss](https://github.com/Fan-Lu/SmartST/tree/master/result_saved/test_loss.png)
+
+![Training Loss](https://github.com/Fan-Lu/SmartST/tree/master/result_saved/train_result_epoch_999.png)
