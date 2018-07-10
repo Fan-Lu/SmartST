@@ -35,7 +35,7 @@ if __name__ == '__main__':
     pa_path = os.path.abspath(os.path.join(os.path.dirname(__file__),os.path.pardir)) # get last state file name
     name1 = '/SmartST/data/data(normalized)/'
     name_start = 20161101
-    num_file = 3
+    num_file = 30
     path1 = pa_path + name1 + str(name_start)+'(normalized).npy'
     temp_data = np.load(path1)
     print("loading " + str(name_start) + "th file!")
