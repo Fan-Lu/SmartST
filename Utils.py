@@ -3,6 +3,13 @@ import numpy as np
 import Config as config
 import csv
 import os
+from PIL import Image
+
+def save_fig(array, name, format=None):
+    array = array.numpy()
+    array *= 255
+    img = Image.fromarray(array, mode='L')
+    img.save(name, format=format)
 
 class DataUnit(object):
     """
@@ -52,7 +59,7 @@ def data_loader(data, interval):
         t_data_close = interval[1]
         data_close = data[i+t_data_close]
         for j in range(i+t_data_close+1, i+t_data_close+num_channel):
-            data_close = np.concatenate((data_close,data[j]),axis=2)
+            data_close = np.concatenate((data_close, data[j]),axis=2)
 
         # get period data
         data_per = data[i]
