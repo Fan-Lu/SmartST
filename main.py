@@ -35,7 +35,7 @@ if __name__ == '__main__':
     pa_path = os.path.abspath(os.path.join(os.path.dirname(__file__),os.path.pardir)) # get last state file name
     name1 = '/SmartST/data/data(normalized)/'
     name_start = 20161101
-    num_file = 30
+    num_file = 3
     path1 = pa_path + name1 + str(name_start)+'(normalized).npy'
     temp_data = np.load(path1)
     print("loading " + str(name_start) + "th file!")
@@ -57,7 +57,6 @@ if __name__ == '__main__':
     iter_size = int(train_size/args.batch_size)
     train_loss_save = []
     test_loss_save = []
-    stnet.load_state_dict(torch.load('model_saved/model_19.pth'))
     for epoch in range(1000):
         sample_index = np.random.shuffle(train_data)
         move_loss = 0
@@ -67,7 +66,7 @@ if __name__ == '__main__':
 
             c_input = Variable(torch.from_numpy(np.array([memory_unit.close for memory_unit in batch_memory]))).view(-1, 4, 200, 200).float().cuda()
             p_input = Variable(torch.from_numpy(np.array([memory_unit.period for memory_unit in batch_memory]))).view(-1, 4, 200, 200).float().cuda()
-            l_input = Variable(torch.from_numpy(np.array([memory_unit.label for memory_unit in batch_memory]))).view(-1, 4, 200, 200).float().cuda()
+            l_input = Variable(torch.from_numpy(np.array([memory_unit.label for memory_unit in batch_memory]))).view(-1, 2, 200, 200).float().cuda()
             e_input = Variable(torch.from_numpy(np.array([memory_unit.weather for memory_unit in batch_memory]))).float().cuda()
 
             input = (c_input, p_input, None, e_input)
@@ -77,7 +76,6 @@ if __name__ == '__main__':
             loss.backward()
             optimizer.step()
             move_loss += loss.cpu().data.numpy()[0]
-            # save_loss.append(loss.cpu().data.numpy()[0])
             print('Training Epoch: {}/1000, Iter: {}/{}, Loss: {}'.format(epoch+1, i+1, iter_size, move_loss/(i+1)))
         train_loss_save.append(move_loss/iter_size)
         # run test every 20 epochs and save results and models
@@ -91,7 +89,7 @@ if __name__ == '__main__':
                 batch_memory = np.array(test_data)[i * args.batch_size:(i + 1) * args.batch_size]
                 c_input = Variable(torch.from_numpy(np.array([memory_unit.close for memory_unit in batch_memory]))).view(-1, 4, 200, 200).float().cuda()
                 p_input = Variable(torch.from_numpy(np.array([memory_unit.period for memory_unit in batch_memory]))).view(-1, 4, 200, 200).float().cuda()
-                l_input = Variable(torch.from_numpy(np.array([memory_unit.label for memory_unit in batch_memory]))).view(-1, 4, 200, 200).float().cuda()
+                l_input = Variable(torch.from_numpy(np.array([memory_unit.label for memory_unit in batch_memory]))).view(-1, 2, 200, 200).float().cuda()
                 e_input = Variable(torch.from_numpy(np.array([memory_unit.weather for memory_unit in batch_memory]))).float().cuda()
                 input = (c_input, p_input, None, e_input)
                 main_output = stnet(input)
@@ -105,7 +103,7 @@ if __name__ == '__main__':
                 os.mkdir(args.result_dir)
             if not args.use_plt: plt.switch_backend('agg')
             plt.figure('Learning Curve')
-            plt.xlabel('Iteration')
+            plt.xlabel('Epoch')
             plt.ylabel('MSE Loss')
             x_train = np.arange(epoch+1)
             x_test = np.arange(19, epoch + 1, 20)
