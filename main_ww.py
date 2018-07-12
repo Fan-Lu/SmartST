@@ -16,15 +16,15 @@ from PIL import Image
 import pandas as pd
 
 parser = argparse.ArgumentParser(description='SmartST')
-parser.add_argument('--model-dir', metavar='DIR', help='path to data', default='/mnt/data//fan/SmartST/model_saved/')
-parser.add_argument('--result-dir', metavar='DIR', help='path to data', default='/mnt/data//fan/SmartST/result_saved/')
+parser.add_argument('--model-dir', metavar='DIR', help='path to data', default='/mnt/data//fan/SmartST/model_saved_ww/')
+parser.add_argument('--result-dir', metavar='DIR', help='path to data', default='/mnt/data//fan/SmartST/result_saved_ww/')
 # parser.add_argument('--model-dir', metavar='DIR', help='path to data', default='/home/exx/Lab/SmartST/model_saved/')
 # parser.add_argument('--result-dir', metavar='DIR', help='path to data', default='/home/exx/Lab/SmartST/result_saved/')
 parser.add_argument('--use-plt', default=False, type=bool, help='plot figure')
 parser.add_argument('--batch-size', default=16, type=int, help='batch size default=32')
 args = parser.parse_args()
 
-stnet = STResNet(external_dim=9).cuda()
+stnet = STResNet(external_dim=-1).cuda()
 criterion = nn.MSELoss()
 optimizer = optim.Adam(stnet.parameters(), lr=1e-3, betas=(0.9, 0.999), eps=1e-8)
 
