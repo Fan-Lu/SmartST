@@ -3,7 +3,7 @@ Maze:
 
 =======File instruction=======
 
-run_this.py: 	used to run (in current directory)
+run_this.py: 	used to run (in current directory; better run in pycharm)
 config.py:	used to set parameters
 maze_env.py:	enviroment for maze
 RL_brain.py:	Reinforcement learning (currently use Q table)
