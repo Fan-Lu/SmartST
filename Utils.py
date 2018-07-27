@@ -114,6 +114,34 @@ def getTemperature():
             type_list.append(ele)
     return temperature, condition, type_list
 
+class enviroment():
+    def __init__(self):
+        self.load_files()
+
+    def load_files(self):
+        a = os.listdir(os.getcwd())
+        files = [os.path.join(os.getcwd(), name) for name in a]
+        print('pass')
+        for file_path in files:
+            if os.path.isfile(file_path) and file_path.endswith('.npy'):
+                tmp = np.load(file_path)
+                setattr(self, file_path[-12:-4], tmp)
+
+        record = getattr(self, "20161101")
+        for i in range(20161102, 20161131):
+            tmp = getattr(self, '{}'.format(i))
+            np.concatenate(record, tmp, axis=0)
+            delattr(self, '{}'.format(i))
+        setattr(self, "database", record)
+
+    def geinitupian(self, time):
+        database = self.database
+        yushu = time % 300
+        index = int(time / 300)
+        jiashu1 = database[index, :, :]
+        jiashu2 = database[index+1, :, :]
+        result = (yushu / 300) * jiashu2 + (1 - (yushu / 300)) * jiashu1
+        return result
 
 
 
