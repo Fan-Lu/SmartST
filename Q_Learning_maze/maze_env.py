@@ -57,7 +57,7 @@ class Maze(tk.Tk, object):
 		# create origin
 		origin = np.array([20, 20])
 
-		# # hell
+		# # hell (we don't need hell
 		# hell1_center = origin + np.array([UNIT * 2, UNIT])
 		# self.hell1 = self.canvas.create_rectangle(
 		#	 hell1_center[0] - 15, hell1_center[1] - 15,
@@ -151,11 +151,12 @@ class Maze(tk.Tk, object):
 		1. time
 		2. distance
 		'''
-		# distance ( Euclidean Distance )
+		# distance (Euclidean Distance )
 		des = self.canvas.coords(self.oval) # [point_1_x, point_1_y, point_2_x, point_2_y]
+											# point_1 is upper left point of rectangle, point_2 is down right
 		distance = np.sqrt((s[0] - des[0])**2 + (s[1] - des[1])**2)
 
-		# speed ( from coords )
+		# speed (from coords we can refer to speed matrix)
 		speed_current = get_speed(s, self.mat_speed)
 		speed_next = get_speed(s_, self.mat_speed)
 		reward_speed = (speed_current + speed_next) / 2	# use mean of current speed & next state's speed
@@ -165,7 +166,7 @@ class Maze(tk.Tk, object):
 			reward_action += config.reward_zero_speed_current
 
 		# time.sleep(0.5)
-		# reward function
+		# reward function todo reward is negtive
 		alpha = config.alpha
 		reward = (-1)*alpha*distance + (1-alpha)*reward_speed + reward_action
 		# print('reward is: {}'.format(reward))
@@ -181,14 +182,15 @@ class Maze(tk.Tk, object):
 		self.update()
 
 def get_speed(state_current, mat_speed):
-
-	index_col = int(state_current[1] // 40)
+	# get speed from speed matrix
+	# coords position -> index in matrix
+	index_col = int(state_current[1] // 40)		# '/40' because each unit is 40 long
 	index_row = int(state_current[0] // 40)
 	# print('check current_coords: {}'.format([state_current[1], state_current[0]]))
 	# print('check index: {}'.format([index_row, index_col]))
 	if 0 <= index_row <= 9 and 0 <= index_col <= 9:
 		speed = mat_speed[index_row][index_col]
-	else:
+	else:	# set speed = 0 if out of matrix
 		speed = 0
 	# print('check speed: {}'.format(mat_speed))
 	return speed
@@ -196,6 +198,7 @@ def get_speed(state_current, mat_speed):
 #
 # 	return
 def load_mat_speed(file_dir):
+	# load speed matrix. todo later we will load from ?
 	mat_speed = []
 	with open(file_dir, 'r') as f:
 		for row in f.readlines():

@@ -67,7 +67,7 @@ def update(epoch):
 
 if __name__ == "__main__":
 	env = Maze()
-	RL = QLearningTable(env = env, actions=list(range(env.n_actions)))
+	RL = QLearningTable(env=env, actions=list(range(env.n_actions)))
 	# RL = QLearningTable(actions=['0', '1', '2', '3'])
 	# try:
 	# 	q_table_file = open('q_table.csv')

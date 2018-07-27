@@ -23,14 +23,14 @@ class QLearningTable:
 
 		self.previous_action = None
 
-	def choose_action(self, observation):	# todo remove action upgrade
+	def choose_action(self, observation):	# todo modify valid action space
 		self.check_state_exist(observation)
 		# action selection
 		# todo change to function
-
+		# here I try to remove some actions, like going backward, going somewhere speed is 0, going out of board
 		action_len = len(self.actions)
 		action_init = list(range(action_len))
-
+		# this is for e_greedy
 		if np.random.uniform() < self.epsilon:
 			# choose best action
 			# print('=======choose best=======')
@@ -42,7 +42,10 @@ class QLearningTable:
 			# choose random action
 			# print(self.actions)
 			# print('=======random=========')
-			# todo remove previous action
+			'''
+			todo, not useful now
+			'''
+			# todo remove previous action ()
 			if self.previous_action is not None:
 				# print(self.previous_action)
 				if self.previous_action == 0:
@@ -54,7 +57,6 @@ class QLearningTable:
 				else:  # self.previous_action == 3
 					action_remove = 2
 			action_init.remove(action_remove)
-
 			# # remove out_of_board action
 			# action_rest = []
 			# for i in range(action_len - 1):
@@ -71,6 +73,9 @@ class QLearningTable:
 			# print('init is')
 			# print(action_init)
 			action = np.random.choice(action_init)
+			'''
+			end
+			'''
 
 			# print('after remove, action is: {}'.format(action_init))
 			# print('action is {}'.format(action))
@@ -116,7 +121,9 @@ def get_valid_action(self, observation):	# todo not done
 
 	return None
 
-def is_out_of_board(s_):  # True means out of board
+def is_out_of_board(s_):
+	# detect if out of board
+	# True means out of board
 	point_x = s_[0]
 	point_y = s_[1]
 	# print('s_ coords: {}'.format([point_x, point_y]))
@@ -127,7 +134,9 @@ def is_out_of_board(s_):  # True means out of board
 	else:
 		return True
 
-def is_zero_speed(s_):  # True means sped is 0
+def is_zero_speed(s_):
+	# decide whether speed is zeo or not
+	# True means speed is 0
 	speed_future = get_speed(s_, mat_speed_u)
 	if speed_future == 0:
 		return True

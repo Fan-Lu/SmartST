@@ -1,29 +1,19 @@
 import numpy as np
 import pandas as pd
 
-# from maze_env import Maze
-
-
-# def get_valid_action(current_state, env):
-#	 total_action = [0, 1, 2, 3]
-#	 valid_action = []
-#	 for i in range(len(total_action)):
-#		 next_state, _, _ = env.step(valid_action[i])
-#		 if
-
-# todo move to env
-
 def action_int2word(action_int):
-	if action_int == 0:  # up
+	# used to output action list if finish in 20 steps
+	if action_int == 0:  	# up
 		return '上'
-	elif action_int == 1:  # down
+	elif action_int == 1:  	# down
 		return '下'
-	elif action_int == 2:  # right
+	elif action_int == 2:  	# right
 		return '右'
-	elif action_int == 3:  # left
+	elif action_int == 3:  	# left
 		return '左'
 
 def save_q_table(q_table):
+	# save q table
 	q_table.to_csv('q_table.csv')
 
 def load_q_table(file_dir, RL): # todo not correct & not neccessary
