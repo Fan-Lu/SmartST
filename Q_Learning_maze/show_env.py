@@ -22,11 +22,11 @@ else:
 
 # from utils import load_mat_speed, get_speed
 import config
-from PIL import Image, ImageTk
 
 UNIT = 40   # pixels
 MAZE_H = 10  # grid height
 MAZE_W = 10  # grid width
+
 
 class Maze(tk.Tk, object):
 	def __init__(self):
@@ -35,24 +35,16 @@ class Maze(tk.Tk, object):
 		self.n_actions = len(self.action_space)
 		self.title('maze')
 		self.geometry('{0}x{1}'.format(MAZE_H * UNIT, MAZE_H * UNIT))
-
-		# load speed image
-		image = Image.open(config.image_file)
-		image_speed = ImageTk.PhotoImage(image)
-		self.image_speed = image_speed
 		self._build_maze()
-		# load speed matrix
-		self.mat_speed = load_mat_speed('mat.txt')
 
+		self.mat_speed = load_mat_speed('mat.txt')
 		# print(self.mat_speed)
 		# print('d')
 
 	def _build_maze(self):
-		self.canvas = tk.Canvas(self, bg='white', height=MAZE_H * UNIT, width=MAZE_W * UNIT)
-
-		# # show speed matrix on gui
-
-		self.canvas.create_image(200, 200, image=self.image_speed)  # 使用create_image将图片添加到Canvas组件中
+		self.canvas = tk.Canvas(self, bg='white',
+						   height=MAZE_H * UNIT,
+						   width=MAZE_W * UNIT)
 
 		# create grids
 		for c in range(0, MAZE_W * UNIT, UNIT):
@@ -93,7 +85,6 @@ class Maze(tk.Tk, object):
 
 		# pack all
 		self.canvas.pack()
-		print('=====')
 
 	def reset(self):
 		self.update()
@@ -107,7 +98,7 @@ class Maze(tk.Tk, object):
 		# return observation
 		return self.canvas.coords(self.rect)
 
-	def step(self, action):
+	def step(self, action, flag_move=True):
 		reward_action = 0	# reward for action (reach target; cost of one step; enter 0 speed block)
 		s = self.canvas.coords(self.rect)
 		# print(s)	# [point_1_horizontal, point_1_vertical, point_2_x, point_2_y]
@@ -139,8 +130,8 @@ class Maze(tk.Tk, object):
 
 		s_ = self.canvas.coords(self.rect)  # next state
 
-		# if not flag_move:
-		# 	self.canvas.move(self.rect, -base_action[0], -base_action[1])
+		if not flag_move:
+			self.canvas.move(self.rect, -base_action[0], -base_action[1])
 		# reward function
 		if s_ == self.canvas.coords(self.oval):
 			reward_action += config.reward_target
@@ -160,7 +151,6 @@ class Maze(tk.Tk, object):
 		1. time
 		2. distance
 		'''
-		# todo pack it into function?
 		# distance (Euclidean Distance )
 		des = self.canvas.coords(self.oval) # [point_1_x, point_1_y, point_2_x, point_2_y]
 											# point_1 is upper left point of rectangle, point_2 is down right
@@ -231,9 +221,7 @@ def update():
 			if done:
 				break
 
-# if __name__ == '__main__':
-# 	# image = Image.open('image_speed.jpeg')
-# 	# image_speed = ImageTk.PhotoImage(image)
-# 	env = Maze()
-# 	env.after(100, update)
-# 	env.mainloop()
+if __name__ == '__main__':
+	env = Maze()
+	env.after(100, update)
+	env.mainloop()

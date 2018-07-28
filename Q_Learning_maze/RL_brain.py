@@ -46,17 +46,18 @@ class QLearningTable:
 			todo, not useful now
 			'''
 			# todo remove previous action ()
-			if self.previous_action is not None:
-				# print(self.previous_action)
-				if self.previous_action == 0:
-					action_remove = 1
-				elif self.previous_action == 1:
-					action_remove = 0
-				elif self.previous_action == 2:
-					action_remove = 3
-				else:  # self.previous_action == 3
-					action_remove = 2
-			action_init.remove(action_remove)
+			# if self.previous_action is not None:
+			# 	# print(self.previous_action)
+			# 	if self.previous_action == 0:
+			# 		action_remove = 1
+			# 	elif self.previous_action == 1:
+			# 		action_remove = 0
+			# 	elif self.previous_action == 2:
+			# 		action_remove = 3
+			# 	else:  # self.previous_action == 3
+			# 		action_remove = 2
+			# action_init.remove(action_remove)
+
 			# # remove out_of_board action
 			# action_rest = []
 			# for i in range(action_len - 1):

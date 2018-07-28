@@ -8,7 +8,7 @@ reward_out_board = -50	# in case it goes out-board
 
 # parameter
 alpha = 0.025	# used in reward function: reward = -alpha*distance + (1-alpha)*speed + reward_action
-epoch = 1000	# play epoch times
+epoch = 2		# play epoch times
 
 # parameter for RL
 e_greedy=0.9
@@ -17,6 +17,9 @@ reward_decay = 0.9
 
 # destiny position
 position = 6
+
+# speed image
+image_file = 'image_speed.jpeg'
 
 
 

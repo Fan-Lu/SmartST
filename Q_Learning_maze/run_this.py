@@ -16,8 +16,10 @@ from maze_env import Maze
 from RL_brain import QLearningTable
 import time
 import os
+from PIL import Image, ImageTk
 from utils import action_int2word, save_q_table, load_q_table
 import config
+
 
 
 def update(epoch):
@@ -66,6 +68,8 @@ def update(epoch):
 	env.destroy()
 
 if __name__ == "__main__":
+	# image = Image.open("image_speed.jpeg")
+	# image_speed = ImageTk.PhotoImage(image)
 	env = Maze()
 	RL = QLearningTable(env=env, actions=list(range(env.n_actions)))
 	# RL = QLearningTable(actions=['0', '1', '2', '3'])
@@ -79,7 +83,6 @@ if __name__ == "__main__":
 	# 	load_q_table('q_table.csv', RL)
 	# print(RL.q_table)
 	env.after(500, update(config.epoch))
-
 
 	env.mainloop()
 	# print('run here')

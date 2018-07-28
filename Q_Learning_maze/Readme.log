@@ -3,15 +3,15 @@ Maze:
 
 =======File instruction=======
 
-run_this.py: 	used to run (in current directory; better run in pycharm)
-config.py:	used to set parameters
+run_this.py: 	used to run
+config.py:		used to set parameters
 maze_env.py:	enviroment for maze
 RL_brain.py:	Reinforcement learning (currently use Q table)
-utils.py:	some utils	
+utils.py:		some utils	
 create_speed_matrix.py:	todo
 
-1.log:		result logfile (example output, not useful)
-mat.txt: 	speed matrix (currently hand-made)
+1.log:			result logfile (example output, not useful)
+mat.txt: 		speed matrix (currently hand-made)
 q_table_1.csv: 	q table (example output)
 
 ======Todo list================
