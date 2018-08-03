@@ -114,14 +114,14 @@ def getTemperature():
             type_list.append(ele)
     return temperature, condition, type_list
 
-class enviroment():
-    def __init__(self):
-        self.load_files()
+class enviroment(): 
+    def __init__(self, dir_name):
+        self.load_files(dir_name)
 
-    def load_files(self):
+    def load_files(self, dir_name):
+	name = os.path.join(os.getcwd(), dir_name)
         a = os.listdir(os.getcwd())
         files = [os.path.join(os.getcwd(), name) for name in a]
-        print('pass')
         for file_path in files:
             if os.path.isfile(file_path) and file_path.endswith('.npy'):
                 tmp = np.load(file_path)
@@ -130,11 +130,13 @@ class enviroment():
         record = getattr(self, "20161101")
         for i in range(20161102, 20161131):
             tmp = getattr(self, '{}'.format(i))
-            np.concatenate(record, tmp, axis=0)
+            record = np.concatenate((record, tmp), axis=0)
             delattr(self, '{}'.format(i))
         setattr(self, "database", record)
 
     def geinitupian(self, time):
+        if time > 2592000:
+            raise ValueError('time must be within 30 days.')
         database = self.database
         yushu = time % 300
         index = int(time / 300)
