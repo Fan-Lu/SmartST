@@ -86,8 +86,8 @@ class Generator:
 
     def matrix(self, tmp):
         self.counter += 1
-        for i in range(1,len(tmp)):
-            sudu = self.speed(tmp[i-1][5], tmp[i-1][6], tmp[i-1][7], tmp[i][5], tmp[i][6], tmp[i][7])
+        for i in range(3,len(tmp)):
+            sudu = self.speed(tmp[i-3][5], tmp[i-3][6], tmp[i-3][7], tmp[i][5], tmp[i][6], tmp[i][7])
             self.data_array[tmp[i][2], tmp[i][3], tmp[i][4], 0] += sudu
             self.data_array[tmp[i][2], tmp[i][3], tmp[i][4], 1] += 1
 
@@ -109,5 +109,7 @@ class Generator:
         self.data_array[:, :, :, 1] += 1e-7
         self.data_array[:, :, :, 0] /= self.data_array[:, :, :, 1]
         np.save(file[-12:-4], self.data_array[:, :, :, 0])
+        np.save(file[-12:-4]+'_counter', self.data_array[:, :, :, 1])
+
 
 preprocess(file_dir)
