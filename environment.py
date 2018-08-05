@@ -2,6 +2,10 @@ import os
 import numpy as np
 import csv
 
+global punishment
+punishment = -1000
+
+
 class enviroment(): 
     def __init__(self, dir_name):
         self.load_files(dir_name)
@@ -14,7 +18,7 @@ class enviroment():
             if os.path.isfile(file_path) and file_path.endswith('.npy') and not file_path.endswith('mask.npy'):
                 tmp = np.load(file_path)
                 setattr(self, file_path[-12:-4], tmp)
-            if file_path.endswith('mask.npy'):
+            if file_path.endswith('maskV1.npy'):
                 tmp1 = np.load(file_path)
                 value_point = []
                 for i in range(tmp1.shape[0]):
@@ -71,11 +75,11 @@ def shuchuCSV(data_array, file_name='tmp'):
             writer.writerow([data_array[0]])
 
 global enviroment_example
-enviroment_example = enviroment('Environment')
+enviroment_example = enviroment('Environment_V2')
 
 class env:
     action_space = {'shang': [0, 1], 'you': [1, 0], 'xia': [0, -1], 'zuo': [-1, 0]}
-    def __init__(self, start_loc, target, time, alpha = 0.5):
+    def __init__(self, start_loc, target, time, alpha = 0.5, time_factor= 0.1):
         self.start = start_loc
         self.target = target
         self.time = time
@@ -86,31 +90,41 @@ class env:
             self.terminate = True
         else:
             self.terminate = False
+        self.time_factor = time_factor
 
     def end_my_travel(self, loc):
         if self.observation[0][loc[0], loc[1]] == 0 or np.sqrt(np.square(loc[0] - self.target[0])+np.square(loc[1] - self.target[1]))<3 :
+            a = self.observation[0][loc[0], loc[1]]
+            b = np.sqrt(np.square(loc[0] - self.target[0])+np.square(loc[1] - self.target[1]))
             return True
         else:
             return False
 
     def select_move(self, move):
         # assert self.action_space.has_key(move), "move must be one of four reasonable movements"
-        reward, observation = self.calculate_reward(self.action_space[move])
-        return reward, observation
+        reward = self.calculate_reward(self.action_space[move])
+        return reward, self.observation, self.terminate
 
     def calculate_reward(self, move):
         tmp = self.data_base.geinitupian(self.time)
         dis = np.sqrt(np.square(self.start[0] - self.target[0]) + np.square(self.start[1] - self.target[1]))
         after = np.sqrt(np.square(self.start[0] + move[0] - self.target[0]) + np.square(self.start[1] + move[1] - self.target[1]))
         dis_reward = dis - after
-        if tmp[self.start[0]+move[0], self.start[1]+move[1]] == 0:
+
+        txx = tmp[self.start[0]+move[0], self.start[1]+move[1]]
+        time_cost_xx = 50 / txx
+
+
+        time_reward = - 50 / (tmp[self.start[0]+move[0], self.start[1]+move[1]] + 1e-7 ) # 50 is block length
+        if time_reward < punishment:
             self.terminate = True
-        time_reward = - 2 * 50 / (tmp[self.start[0]+move[0], self.start[1]+move[1]]+1e-7) # 50 is block length
-        reward = dis_reward * self.alpha + time_reward * (1 - self.alpha)
+            self.observation = [self.observation[0], self.observation[1], self.target_and_loc(self.start)]
+            return punishment
+        reward = dis_reward * self.alpha + self.time_factor * time_reward * (1 - self.alpha)
         self.time -= time_reward
         self.start = [self.start[0] + move[0], self.start[1] + move[1]]
         self.observation=[self.data_base.geinitupian(self.time), self.observation[1], self.target_and_loc(self.start)]
-        return reward, self.observation, self.terminate
+        return reward
 
     def target_and_loc(self, loc, width = 5, block_size=[100, 100]):
         assert type(loc) == list and loc.__len__()==2 and loc[0]>=0 and loc[0]<=(block_size[0]-1) and loc[1]>=0 and loc[1]<=(block_size[1]-1), "Input must be a list, and it must has two eligible int number"
@@ -134,8 +148,8 @@ def caijian(heng, zong):
         np.save(str(i)+'_jietu', saved)
 
 # caijian([99,199], [99,199])
-tmp_env = env(enviroment_example.value_point[0], enviroment_example.value_point[666], 999)
-enviroment_example.value_point[0]
+tmp_env = env([28, 21], enviroment_example.value_point[666], 999)
+enviroment_example.value_point[999]
 check = tmp_env.observation
-a, b = tmp_env.select_move('shang')
+a, b, c = tmp_env.select_move('shang')
 print('test_finished')
