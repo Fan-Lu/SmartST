@@ -8,12 +8,20 @@ class enviroment():
 
     def load_files(self, dir_name):
         name = os.path.join(os.getcwd(), dir_name)
-        a = os.listdir(os.getcwd())
-        files = [os.path.join(os.getcwd(), name) for name in a]
+        a = os.listdir(name)
+        files = [os.path.join(name, names) for names in a]
         for file_path in files:
             if os.path.isfile(file_path) and file_path.endswith('.npy') and not file_path.endswith('mask.npy'):
                 tmp = np.load(file_path)
-                setattr(self, file_path[-18:-10], tmp)
+                setattr(self, file_path[-12:-4], tmp)
+            if file_path.endswith('mask.npy'):
+                tmp1 = np.load(file_path)
+                value_point = []
+                for i in range(tmp1.shape[0]):
+                    for j in range(tmp1.shape[1]):
+                        if tmp1[i,j]!=0:
+                            value_point.append([i,j])
+                setattr(self, "value_point", value_point)
 
         record = getattr(self, "20161101")
         for i in range(20161102, 20161131):
@@ -63,7 +71,7 @@ def shuchuCSV(data_array, file_name='tmp'):
             writer.writerow([data_array[0]])
 
 global enviroment_example
-enviroment_example = enviroment('database')
+enviroment_example = enviroment('Environment')
 
 class env:
     action_space = {'shang': [0, 1], 'you': [1, 0], 'xia': [0, -1], 'zuo': [-1, 0]}
@@ -74,6 +82,16 @@ class env:
         self.data_base = enviroment_example
         self.observation = [self.data_base.geinitupian(time), self.target_and_loc(target), self.target_and_loc(start_loc)]
         self.alpha = alpha
+        if self.end_my_travel(start_loc):
+            self.terminate = True
+        else:
+            self.terminate = False
+
+    def end_my_travel(self, loc):
+        if self.observation[0][loc[0], loc[1]] == 0 or np.sqrt(np.square(loc[0] - self.target[0])+np.square(loc[1] - self.target[1]))<3 :
+            return True
+        else:
+            return False
 
     def select_move(self, move):
         # assert self.action_space.has_key(move), "move must be one of four reasonable movements"
@@ -85,12 +103,14 @@ class env:
         dis = np.sqrt(np.square(self.start[0] - self.target[0]) + np.square(self.start[1] - self.target[1]))
         after = np.sqrt(np.square(self.start[0] + move[0] - self.target[0]) + np.square(self.start[1] + move[1] - self.target[1]))
         dis_reward = dis - after
+        if tmp[self.start[0]+move[0], self.start[1]+move[1]] == 0:
+            self.terminate = True
         time_reward = - 2 * 50 / (tmp[self.start[0]+move[0], self.start[1]+move[1]]+1e-7) # 50 is block length
         reward = dis_reward * self.alpha + time_reward * (1 - self.alpha)
         self.time -= time_reward
         self.start = [self.start[0] + move[0], self.start[1] + move[1]]
         self.observation=[self.data_base.geinitupian(self.time), self.observation[1], self.target_and_loc(self.start)]
-        return reward, self.observation
+        return reward, self.observation, self.terminate
 
     def target_and_loc(self, loc, width = 5, block_size=[100, 100]):
         assert type(loc) == list and loc.__len__()==2 and loc[0]>=0 and loc[0]<=(block_size[0]-1) and loc[1]>=0 and loc[1]<=(block_size[1]-1), "Input must be a list, and it must has two eligible int number"
@@ -114,7 +134,8 @@ def caijian(heng, zong):
         np.save(str(i)+'_jietu', saved)
 
 # caijian([99,199], [99,199])
-tmp_env = env([21, 14], [45, 87], 999)
+tmp_env = env(enviroment_example.value_point[0], enviroment_example.value_point[666], 999)
+enviroment_example.value_point[0]
 check = tmp_env.observation
 a, b = tmp_env.select_move('shang')
 print('test_finished')

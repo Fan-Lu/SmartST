@@ -119,7 +119,7 @@ class enviroment():
         self.load_files(dir_name)
 
     def load_files(self, dir_name):
-	name = os.path.join(os.getcwd(), dir_name)
+	    name = os.path.join(os.getcwd(), dir_name)
         a = os.listdir(os.getcwd())
         files = [os.path.join(os.getcwd(), name) for name in a]
         for file_path in files:
@@ -144,6 +144,10 @@ class enviroment():
         jiashu2 = database[index+1, :, :]
         result = (yushu / 300) * jiashu2 + (1 - (yushu / 300)) * jiashu1
         return result
+
+
+
+
 
 
 
