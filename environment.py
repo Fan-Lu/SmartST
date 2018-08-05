@@ -92,6 +92,16 @@ class env:
             self.terminate = False
         self.time_factor = time_factor
 
+    def reset(self, start_loc, target, time):
+        self.start = start_loc
+        self.target = target
+        self.time = time
+        self.observation = [self.data_base.geinitupian(time), self.target_and_loc(target), self.target_and_loc(start_loc)]
+        if self.end_my_travel(start_loc):
+            self.terminate = True
+        else:
+            self.terminate = False
+
     def end_my_travel(self, loc):
         if self.observation[0][loc[0], loc[1]] == 0 or np.sqrt(np.square(loc[0] - self.target[0])+np.square(loc[1] - self.target[1]))<3 :
             a = self.observation[0][loc[0], loc[1]]
