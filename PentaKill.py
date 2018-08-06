@@ -1,6 +1,6 @@
 import os
 import sys
-from Environment import environment
+from Environment_V2 import environment
 import torch
 import numpy as np
 
@@ -32,7 +32,11 @@ if __name__ == '__main__':
     c_cx = Variable(torch.zeros(1, 256)).cuda()
     c_hx = Variable(torch.zeros(1, 256)).cuda()
 
-    s = Variable(torch.randn(3, 100, 100)).view(1, 3, 100, 100).float().cuda() # reset environment
+    # s = Variable(torch.randn(3, 100, 100)).view(1, 3, 100, 100).float().cuda() # reset environment
+    value_point = ENV.data_base.value_point
+    s = ENV.reset(start_loc=value_point[0], target=value_point[300], time=1)
+    s = Variable(torch.from_numpy(np.array(s)).view(1, 3, 100, 100).float()).cuda()
+
     while True:
         probs, (a_hx, a_cx) = actor((s, (a_hx, a_cx)))
         action = probs.multinomial(1)
@@ -40,9 +44,8 @@ if __name__ == '__main__':
         log_prob = lporbs.gather(1, action)
 
         real_action = action_dic[int(action.cpu().data.numpy())]
-        s_, r, done = ENV.select_move(real_action)
+        s_, r, done = ENV.step(real_action)
         s_ = Variable(torch.from_numpy(np.array(s_))).view(1, 3, 100, 100).float().cuda()
-        if done: r = -10000
 
         v_curr, (c_hx, c_cx) = critic((s, (c_hx, c_cx)))
         v_next, (c_hx, c_cx) = critic((s_, (c_hx, c_cx)))
