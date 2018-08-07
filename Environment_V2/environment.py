@@ -160,6 +160,10 @@ class env:
             self.canv_img = self.canvas.create_image(20, 20, anchor='nw', image=img)
             self.root.update()
 
+        if self.end_my_travel(self.start):
+            reward = 1000
+            self.terminate = True
+
         return self.observation, reward, self.terminate
 
     def calculate_reward(self, move):
