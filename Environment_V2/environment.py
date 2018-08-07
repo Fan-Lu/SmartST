@@ -141,7 +141,7 @@ class env:
             img = ImageTk.PhotoImage(Image.fromarray(np.array(self.observation), "RGB").resize(800, 800))
             self.canv_img = self.canvas.create_image(20, 20, image=img)
             self.root.update()
-            
+
         return self.observation, reward, self.terminate
 
     def calculate_reward(self, move):
