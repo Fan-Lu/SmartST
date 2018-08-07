@@ -164,7 +164,7 @@ class env:
             reward = 1000
             self.terminate = True
 
-        return self.observation, reward, self.terminate
+        return self.observation, reward, self.terminate, [self.start, self.target]
 
     def calculate_reward(self, move):
         tmp = self.data_base.geinitupian(self.time)
