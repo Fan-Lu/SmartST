@@ -82,7 +82,7 @@ global enviroment_example
 enviroment_example = enviroment('Environment_V2')
 
 class env:
-    action_space = {'up': [0, 1], 'right': [1, 0], 'down': [0, -1], 'left': [-1, 0]}
+    action_space = {'up': [0, 1], 'upright': [1, 1], 'right': [1, 0], 'rightdown': [1, -1], 'down': [0, -1], 'downleft':[-1, -1], 'left': [-1, 0], 'leftup': [-1, 1]}
     def __init__(self, start_loc, target, time, alpha = 0.5, time_factor= 0.1, plot = True, sleep = 0.5):
         self.start = start_loc
         self.target = target
@@ -99,10 +99,16 @@ class env:
             self.sleep = sleep
             self.plot = plot
             self.root = tk.Tk()
-            self.canvas = tk.Canvas(self.root, height=500, width=500)
+            self.canvas = tk.Canvas(self.root, bg="white",height=900, width=900)
             self.canvas.pack()
-            img = ImageTk.PhotoImage(Image.fromarray(np.array(self.observation), "RGB").resize(800, 800))
-            self.canv_img = self.canvas.create_image(20, 20, image=img)
+            tmp = self.observation[0] * 3
+            tmp[self.start[0], self.start[1]] = 255
+            tmp[self.target[0], self.target[1]] = 255
+            tmp1 = Image.fromarray(tmp).resize((800, 800))
+            # tmp1.show()
+            img = ImageTk.PhotoImage(tmp1)
+            # img = ImageTk.PhotoImage(Image.fromarray(tmp).resize((800, 800)))\
+            self.canv_img = self.canvas.create_image(20, 20, anchor='nw', image=img)
             self.root.update()
 
 
@@ -118,8 +124,14 @@ class env:
 
         if self.plot:
             self.canvas.delete(self.canv_img)
-            img = ImageTk.PhotoImage(Image.fromarray(np.array(self.observation), "RGB").resize(800, 800))
-            self.canv_img = self.canvas.create_image(20, 20, image=img)
+            tmp = self.observation[0] * 3
+            tmp[self.start[0], self.start[1]] = 255
+            tmp[self.target[0], self.target[1]] = 255
+            tmp1 = Image.fromarray(tmp).resize((800, 800))
+            # tmp1.show()
+            img = ImageTk.PhotoImage(tmp1)
+            # img = ImageTk.PhotoImage(Image.fromarray(tmp).resize((800, 800)))
+            self.canv_img = self.canvas.create_image(20, 20, anchor='nw', image=img)
             self.root.update()
         return self.observation
 
@@ -138,8 +150,14 @@ class env:
 
         if self.plot:
             self.canvas.delete(self.canv_img)
-            img = ImageTk.PhotoImage(Image.fromarray(np.array(self.observation), "RGB").resize(800, 800))
-            self.canv_img = self.canvas.create_image(20, 20, image=img)
+            tmp = self.observation[0] * 3
+            tmp[self.start[0], self.start[1]] = 255
+            tmp[self.target[0], self.target[1]] = 255
+            tmp1 = Image.fromarray(tmp).resize((800, 800))
+            # tmp1.show()
+            img = ImageTk.PhotoImage(tmp1)
+            # img = ImageTk.PhotoImage(Image.fromarray(tmp).resize((800, 800)))
+            self.canv_img = self.canvas.create_image(20, 20, anchor='nw', image=img)
             self.root.update()
 
         return self.observation, reward, self.terminate

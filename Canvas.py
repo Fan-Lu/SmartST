@@ -79,11 +79,11 @@ def test(times):
     img = ImageTk.PhotoImage(Image.fromarray(tmp, "RGB").resize((800, 800)))
     canv_pic = canvas.create_image(20, 20, image=img)
     root.update()
-    for i in range(times):
+    for _ in range(times):
         canvas.delete(canv_pic)
         tmp = np.random.randn(100, 100, 3)
         img = ImageTk.PhotoImage(Image.fromarray(tmp, "RGB").resize((800, 800)))
-        canv_pic = canvas.create_image(20, 20, image=img)
+        canv_pic = canvas.create_image(20, 20, anchor='nw', image=img)
         root.update()
         print("finish one test")
 

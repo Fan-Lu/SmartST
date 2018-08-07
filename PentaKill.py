@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     # s = Variable(torch.randn(3, 100, 100)).view(1, 3, 100, 100).float().cuda() # reset environment
     value_point = ENV.data_base.value_point
-    s = ENV.reset(start_loc=value_point[0], target=value_point[300], time=1)
+    s = ENV.reset(start_loc=value_point[15], target=value_point[300], time=1)
     s = Variable(torch.from_numpy(np.array(s)).view(1, 3, 100, 100).float()).cuda()
 
     while True:
