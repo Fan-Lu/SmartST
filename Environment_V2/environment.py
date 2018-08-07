@@ -1,6 +1,10 @@
 import os
 import numpy as np
 import csv
+import matplotlib.pyplot as plt
+from PIL import Image, ImageTk
+import time
+import tkinter as tk
 
 global punishment
 punishment = -1000
@@ -79,7 +83,7 @@ enviroment_example = enviroment('Environment_V2')
 
 class env:
     action_space = {'up': [0, 1], 'right': [1, 0], 'down': [0, -1], 'left': [-1, 0]}
-    def __init__(self, start_loc, target, time, alpha = 0.5, time_factor= 0.1):
+    def __init__(self, start_loc, target, time, alpha = 0.5, time_factor= 0.1, plot = True, sleep = 0.5):
         self.start = start_loc
         self.target = target
         self.time = time
@@ -91,6 +95,16 @@ class env:
         else:
             self.terminate = False
         self.time_factor = time_factor
+        if plot:
+            self.sleep = sleep
+            self.plot = plot
+            self.root = tk.Tk()
+            self.canvas = tk.Canvas(self.root, height=500, width=500)
+            self.canvas.pack()
+            img = ImageTk.PhotoImage(Image.fromarray(np.array(self.observation), "RGB").resize(800, 800))
+            self.canv_img = self.canvas.create_image(20, 20, image=img)
+            self.root.update()
+
 
     def reset(self, start_loc, target, time):
         self.start = start_loc
@@ -101,6 +115,12 @@ class env:
             self.terminate = True
         else:
             self.terminate = False
+
+        if self.plot:
+            self.canvas.delete(self.canv_img)
+            img = ImageTk.PhotoImage(Image.fromarray(np.array(self.observation), "RGB").resize(800, 800))
+            self.canv_img = self.canvas.create_image(20, 20, image=img)
+            self.root.update()
         return self.observation
 
     def end_my_travel(self, loc):
@@ -111,18 +131,17 @@ class env:
         else:
             return False
 
-    def render(self):
-        # TODO: GUI
-        """
-        :param: state
-
-        Function: display state indicating agent position
-        """
-        pass
 
     def step(self, move):
         # assert self.action_space.has_key(move), "move must be one of four reasonable movements"
         reward = self.calculate_reward(self.action_space[move])
+
+        if self.plot:
+            self.canvas.delete(self.canv_img)
+            img = ImageTk.PhotoImage(Image.fromarray(np.array(self.observation), "RGB").resize(800, 800))
+            self.canv_img = self.canvas.create_image(20, 20, image=img)
+            self.root.update()
+            
         return self.observation, reward, self.terminate
 
     def calculate_reward(self, move):
