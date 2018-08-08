@@ -14,8 +14,8 @@ from Agent.ac import Actor, Critic
 actor = Actor(A_DIM=8).cuda()
 critic = Critic(A_DIM=8).cuda()
 
-a_opt = optim.Adam(actor.parameters(), lr=0.001)
-c_opt = optim.Adam(critic.parameters(), lr=0.001)
+a_opt = optim.Adam(actor.parameters(), lr=0.00001)
+c_opt = optim.Adam(critic.parameters(), lr=0.00001)
 
 ENV = environment.env([21, 14], [45, 87], 999)
 
@@ -27,19 +27,20 @@ if __name__ == '__main__':
     actor.train()
     critic.train()
 
-    a_cx = Variable(torch.zeros(1, 256)).cuda()
-    a_hx = Variable(torch.zeros(1, 256)).cuda()
-
-    c_cx = Variable(torch.zeros(1, 256)).cuda()
-    c_hx = Variable(torch.zeros(1, 256)).cuda()
-
-    # s = Variable(torch.randn(3, 100, 100)).view(1, 3, 100, 100).float().cuda() # reset environment
     value_point = ENV.data_base.value_point
+    episode = 0
 
     while True:
         s = ENV.reset(start_loc=value_point[15], target=[48, 46], time=1)
         s = Variable(torch.from_numpy(np.array(s)).view(1, 3, 100, 100).float()).cuda()
-        for i in range(10000):
+
+        a_cx = Variable(torch.zeros(1, 256)).cuda()
+        a_hx = Variable(torch.zeros(1, 256)).cuda()
+
+        c_cx = Variable(torch.zeros(1, 256)).cuda()
+        c_hx = Variable(torch.zeros(1, 256)).cuda()
+
+        for step in range(10000):
             probs, (a_hx, a_cx) = actor((s, (a_hx, a_cx)))
             action = probs.multinomial(1)
             lporbs = torch.log(probs)
@@ -67,8 +68,9 @@ if __name__ == '__main__':
 
             s = s_
 
-            print(real_action)
+            print('Episode: {} Step: {} Aciton: {}'.format(episode, step, real_action))
 
             if done:
+                episode += 1
                 break
 
