@@ -168,6 +168,7 @@ class env:
     def step(self, move):
         # One step
         reward = self.calculate_reward(self.action_space[move])
+        success = False
 
         if self.plot:
             self.canvas.delete(self.canv_img)
@@ -181,11 +182,12 @@ class env:
             self.canv_img = self.canvas.create_image(20, 20, anchor='nw', image=img)
             self.root.update()
 
-        if self.end_my_travel(self.start):
+        if self.end_my_travel(self.start) and self.observation[0][self.start[0], self.start[1]] != 0:
             reward = 1000
             self.terminate = True
+            success = True
 
-        return self.observation, reward, self.terminate, [self.start, self.target]
+        return self.observation, reward, self.terminate, [self.start, self.target], success
 
     def calculate_reward(self, move):
         tmp = self.data_base.geinitupian(self.time)
