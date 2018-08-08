@@ -117,10 +117,11 @@ class env:
         if plot:
             self.sleep = sleep
             self.plot = plot
+            self.cache = self.observation[0]
             self.root = tk.Tk()
             self.canvas = tk.Canvas(self.root, bg="white",height=900, width=900)
             self.canvas.pack()
-            tmp = self.observation[0] * 3
+            tmp = self.observation[0]
             tmp[self.start[0], self.start[1]] = 255
             tmp[self.target[0], self.target[1]] = 255
             tmp1 = Image.fromarray(tmp).resize((800, 800))
@@ -144,7 +145,11 @@ class env:
 
         if self.plot:
             self.canvas.delete(self.canv_img)
-            tmp = self.observation[0] * 3
+            tmp = self.observation[0] - self.cache
+            self.cache = self.observation[0]
+            tmp = self.observation[0] * 2 +tmp * 2000
+            tmp[tmp < 0] = 0
+            tmp[tmp >= 255] = 255
             tmp[self.start[0], self.start[1]] = 255
             tmp[self.target[0], self.target[1]] = 255
             tmp1 = Image.fromarray(tmp).resize((800, 800))
@@ -164,7 +169,6 @@ class env:
         else:
             return False
 
-
     def step(self, move):
         # One step
         reward = self.calculate_reward(self.action_space[move])
@@ -172,7 +176,11 @@ class env:
 
         if self.plot:
             self.canvas.delete(self.canv_img)
-            tmp = self.observation[0] * 3
+            tmp = self.observation[0] - self.cache
+            self.cache = self.observation[0]
+            tmp = self.observation[0] * 2 + tmp * 2000
+            tmp[tmp < 0] = 0
+            tmp[tmp >= 255] = 255
             tmp[self.start[0], self.start[1]] = 255
             tmp[self.target[0], self.target[1]] = 255
             tmp1 = Image.fromarray(tmp).resize((800, 800))
