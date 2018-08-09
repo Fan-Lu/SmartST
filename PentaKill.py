@@ -47,7 +47,7 @@ if __name__ == '__main__':
             log_prob = lporbs.gather(1, action)
 
             real_action = action_dic[int(action.cpu().data.numpy())]
-            s_, r, done, info = ENV.step(real_action)
+            s_, r, done, info, success = ENV.step(real_action)   # True: Read terminal
             s_ = Variable(torch.from_numpy(np.array(s_))).view(1, 3, 100, 100).float().cuda()
 
             v_curr, (c_hx, c_cx) = critic((s, (c_hx, c_cx)))
@@ -73,4 +73,15 @@ if __name__ == '__main__':
             if done:
                 episode += 1
                 break
+
+            if success:
+                if not os.path.exists('/home/exx/Lab/SmartST/model_saved_rl'):
+                    os.mkdir('/home/exx/Lab/SmartST/model_saved_rl')
+                torch.save(actor.state_dict(), '/home/exx/Lab/SmartST/model_saved_rl/' + 'suc_model_{:d}.pth'.format(episode))
+
+        if (episode + 1) % 1000 == 0:
+            if not os.path.exists('/home/exx/Lab/SmartST/model_saved_rl'):
+                os.mkdir('/home/exx/Lab/SmartST/model_saved_rl')
+            torch.save(actor.state_dict(), '/home/exx/Lab/SmartST/model_saved_rl/' + 'model_{:d}.pth'.format(episode))
+
 
