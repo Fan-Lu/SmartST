@@ -8,6 +8,7 @@ import tkinter as tk
 
 global punishment
 punishment = -1000
+Reward = 1000
 
 
 class enviroment():
@@ -104,6 +105,7 @@ class env:
     '''
     def __init__(self, start_loc, target, time, alpha = 0.5, time_factor= 0.1, plot = True, sleep = 0.5):
         self.start = start_loc
+        self.record = start_loc
         self.target = target
         self.time = time
         self.data_base = enviroment_example
@@ -135,6 +137,7 @@ class env:
     def reset(self, start_loc, target, time):
         # To reset or env's location, target and time.
         self.start = start_loc
+        self.record = start_loc
         self.target = target
         self.time = time
         self.observation = [self.data_base.geinitupian(time), self.target_and_loc(target), self.target_and_loc(start_loc)]
@@ -191,11 +194,17 @@ class env:
             self.root.update()
 
         if self.end_my_travel(self.start) and self.observation[0][self.start[0], self.start[1]] != 0:
-            reward = 1000
+            reward = Reward
             self.terminate = True
             success = True
 
         return self.observation, reward, self.terminate, [self.start, self.target], success
+
+    def final_reward(self):
+        finished_part = ((self.record[0] - self.start[0])**2 + (self.record[1] - self.start[1])**2)**0.5
+        unfinished_part = ((self.target[0] - self.start[0])**2 + (self.target[1] - self.start[1])**2)**0.5
+        reward = Reward * (unfinished_part/(unfinished_part + finished_part ))
+        return reward
 
     def calculate_reward(self, move):
         tmp = self.data_base.geinitupian(self.time)
@@ -206,12 +215,12 @@ class env:
         txx = tmp[self.start[0]+move[0], self.start[1]+move[1]]
         time_cost_xx = 50 / txx
 
-
         time_reward = - 50 / (tmp[self.start[0]+move[0], self.start[1]+move[1]] + 1e-7 ) # 50 is block length
         if time_reward < punishment:
             self.terminate = True
             self.observation = [self.observation[0], self.observation[1], self.target_and_loc(self.start)]
-            return punishment
+            final = self.final_reward()
+            return punishment + final
         reward = dis_reward * self.alpha + self.time_factor * time_reward * (1 - self.alpha)
         self.time -= time_reward
         self.start = [self.start[0] + move[0], self.start[1] + move[1]]
