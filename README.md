@@ -22,8 +22,9 @@
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
                                    佛祖保佑       永无BUG
 
-### Just Gan it!
-<p align="center"><img width="60%" src="https://github.com/Fan-Lu/SmartST/blob/master/result_saved/images.jpeg" /></p>
+### Demo
+<p align="center"><img width="60%" src="https://github.com/Fan-Lu/SmartST/blob/master/FinalResults/test_episode97.gif" /></p>
+<p align="center"><img width="60%" src="https://github.com/Fan-Lu/SmartST/blob/master/FinalResults/test_episode239.gif" /></p>
 
 ### Testing Loss
 <p align="center"><img width="60%" src="https://github.com/Fan-Lu/SmartST/blob/master/result_saved/test_loss.png" /></p>
