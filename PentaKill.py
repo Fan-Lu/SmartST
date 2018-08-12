@@ -129,6 +129,9 @@ if __name__ == '__main__':
 
                     if success:
                         # Save to GIF
+                        if not os.path.exists(args.result_dir + '../FinalResults/:'):
+                            os.mkdir(args.result_dir + '../FinalResults/')
+
                         if not os.path.exists(args.result_dir):
                             os.mkdir(args.result_dir)
 
@@ -136,7 +139,7 @@ if __name__ == '__main__':
                             save_fn = args.result_dir + 'test_episode_{}_step_{}'.format(episode, i) + '.png'
                             save_plots.append(imageio.imread(save_fn))
 
-                        imageio.mimsave(args.result_dir + 'test_episode{}.gif'.format(episode), save_plots, fps=5)
+                        imageio.mimsave(args.result_dir + '../FinalResults/' + 'test_episode{}.gif'.format(episode), save_plots, fps=5)
                         stop_all_flag = True
                         break
                     if done:
