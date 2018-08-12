@@ -103,7 +103,7 @@ class env:
     plot: if set true, our env will show a display windows.
     sleep: TO DO ISSUE
     '''
-    def __init__(self, start_loc, target, time, alpha = 0.5, time_factor= 0.1, plot = True, sleep = 0.5):
+    def __init__(self, start_loc, target, time, alpha = 0.5, time_factor= 0.1, sleep = 0.5, args=None):
         self.start = start_loc
         self.record = start_loc
         self.target = target
@@ -111,14 +111,17 @@ class env:
         self.data_base = enviroment_example
         self.observation = [self.data_base.geinitupian(time), self.target_and_loc(target), self.target_and_loc(start_loc)]
         self.alpha = alpha
+        self.args = args
+
         if self.end_my_travel(start_loc):
             self.terminate = True
         else:
             self.terminate = False
         self.time_factor = time_factor
-        if plot:
+
+        self.plot = self.args.use_plt
+        if self.plot:
             self.sleep = sleep
-            self.plot = plot
             self.cache = self.observation[0]
             self.root = tk.Tk()
             self.canvas = tk.Canvas(self.root, bg="white",height=900, width=900)
@@ -150,16 +153,15 @@ class env:
             self.canvas.delete(self.canv_img)
             tmp = self.observation[0] - self.cache
             self.cache = self.observation[0]
-            tmp = self.observation[0] * 2 +tmp * 2000
+            tmp = self.observation[0] * 2 + tmp * 200
             tmp[tmp < 0] = 0
             tmp[tmp >= 255] = 255
             tmp[self.start[0], self.start[1]] = 255
             tmp[self.target[0], self.target[1]] = 255
             tmp1 = Image.fromarray(tmp).resize((800, 800))
-            # tmp1.show()
             img = ImageTk.PhotoImage(tmp1)
-            # img = ImageTk.PhotoImage(Image.fromarray(tmp).resize((800, 800)))
             self.canv_img = self.canvas.create_image(20, 20, anchor='nw', image=img)
+
             self.root.update()
         return self.observation
 
@@ -172,7 +174,7 @@ class env:
         else:
             return False
 
-    def step(self, move):
+    def step(self, move, episode, step, is_test):
         # One step
         reward = self.calculate_reward(self.action_space[move])
         success = False
@@ -181,16 +183,20 @@ class env:
             self.canvas.delete(self.canv_img)
             tmp = self.observation[0] - self.cache
             self.cache = self.observation[0]
-            tmp = self.observation[0] * 2 + tmp * 2000
+            tmp = self.observation[0] * 2 + tmp * 200
             tmp[tmp < 0] = 0
             tmp[tmp >= 255] = 255
             tmp[self.start[0], self.start[1]] = 255
             tmp[self.target[0], self.target[1]] = 255
             tmp1 = Image.fromarray(tmp).resize((800, 800))
-            # tmp1.show()
+
+            if is_test:
+                tmp2 = tmp1.convert(mode = "L")
+                tmp2.save(self.args.result_dir + 'test_episode_{}_step_{}'.format(episode, step) + '.png')
+
             img = ImageTk.PhotoImage(tmp1)
-            # img = ImageTk.PhotoImage(Image.fromarray(tmp).resize((800, 800)))
             self.canv_img = self.canvas.create_image(20, 20, anchor='nw', image=img)
+
             self.root.update()
 
         if self.end_my_travel(self.start) and self.observation[0][self.start[0], self.start[1]] != 0:
