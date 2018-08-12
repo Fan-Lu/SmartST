@@ -14,11 +14,17 @@ from Agent.dpg import PolicyGradient
 
 import matplotlib.pyplot as plt
 
+from Config import *
+
+args = GetConfiguration()
+args.model_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),os.path.pardir)) + '/SmartST/model_saved_rl/'
+args.result_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),os.path.pardir)) + '/SmartST/result_saved_rl/'
 
 ac_dic = ['up', 'upright', 'right', 'rightdown', 'down', 'downleft', 'left', 'leftup']
-PG = PolicyGradient(A_DIM=8, S_DIM=3, lr=0.01, reward_decay=0.95).cuda()
-Optimizer = optim.Adam(PG.parameters(), lr=0.001)
-ENV = environment.env([2, 51], [48, 46], 1)
+PG = PolicyGradient(A_DIM=8, S_DIM=3, lr=args.lrate, reward_decay=args.GAMMA).cuda()
+Optimizer = optim.Adam(PG.parameters(), lr=args.lrate)
+# start_loc, target, time, alpha = 0.5, time_factor= 0.1, plot = True, sleep = 0.5):
+ENV = environment.env(start_loc=[2, 51], target=[48, 46], time=1, plot=args.use_plt)
 
 
 if __name__ == '__main__':
@@ -71,12 +77,19 @@ if __name__ == '__main__':
 
                 ep_as, ep_pbs, ep_obs, ep_rs = [], [], [], []
 
-                # if episode % 100 == 0:
-                #     plt.close()
-                #     plt.plot(discounted_ep_rs_norm.data.numpy())    # plot the episode vt
-                #     plt.xlabel('episode steps')
-                #     plt.ylabel('normalized state-action value')
-                #     plt.show()
+                if episode % 500 == 0:
+                    if not os.path.exists(args.result_dir):
+                        os.mkdir(args.result_dir)
+                    if not args.use_plt: plt.switch_backend('agg')
+                    plt.plot(discounted_ep_rs_norm.data.numpy())    # plot the episode vt
+                    plt.xlabel('episode steps')
+                    plt.ylabel('normalized state-action value')
+                    plt.savefig(args.result_dir + 'deprs_episode{}'.format(episode))
+
+                if success:
+                    if not os.path.exists(args.model_dir):
+                        os.mkdir(args.model_dir)
+                    torch.save(PG.state_dict(), args.model_dir + 'suc_model_{:d}.pth'.format(episode))
 
                 break
 
