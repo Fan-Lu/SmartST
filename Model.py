@@ -2,7 +2,8 @@ from __future__ import print_function
 
 import paddle
 import paddle.fluid as fluid
-import numpy
+import numpy as np
+
 import sys
 
 def conv_bn_layer(main_input, ch_out, filter_size, stride, padding, act='relu'):
@@ -23,7 +24,10 @@ class Actor(object):
         self.prob = None
         self.a_hx = None
         self.a_cx = None
-        self.prob_program =None
+        self.log_prob = None
+        self.prob_program = None
+        self.place = fluid.CPUPlace()
+        self.exe = fluid.Executor(self.place)
 
     def get_input(self):
         # create input
@@ -31,11 +35,14 @@ class Actor(object):
         a_cx = fluid.layers.data(name='a_cx', shape=[256], dtype='float32')
         a_hx = fluid.layers.data(name='a_hx', shape=[256], dtype='float32')
         td_error = fluid.layers.data(name='td_error', shape=[1], dtype='float32')
-
         return s, a_cx, a_hx, td_error
 
     def act(self, state):
-        return self.exe.run(self.prob_program, feed={'state': state})
+        # state = np.expand_dims(state, axis=0)
+        print(state[np.newaxis, :].shape)
+        return self.exe.run(self.prob_program,
+                            feed={'current_state': state[np.newaxis, :]},
+                            fetch_list=[self.probs])
 
     def get_values(self):
         return self.a_hx, self.a_cx
@@ -49,18 +56,20 @@ class Actor(object):
         a_fc5 = fluid.layers.fc(input=a_conv4, size=50, act='relu')
         self.a_hx, self.a_cx = fluid.layers.lstm_unit(x_t=a_fc5, hidden_t_prev=a_hx, cell_t_prev=a_cx)
 
-        fc = fluid.layers.fc(input=self.a_hx, size=self.A_DIM)
-        probs = fluid.layers.softmax(input=fc)
-        self.prob_program = fluid.default_main_program().clone()
-        lprobs = fluid.layers.log(probs)  # log operation 1*8
+        self.probs = fluid.layers.fc(input=self.a_hx, size=self.A_DIM, act='softmax')
+        print(self.probs.shape)
+        self.prob_program = fluid.default_main_program().clone()  # 1*8
 
-        log_prob = fluid.layers.reduce_max(fluid.layers.reduce_max(lprobs, dim=0))   # get probability at index action
-        td_error = fluid.layers.reduce_max(td_error, dim=0)
-        # print(td_error.shape, log_prob.shape)
-        # neg_log_prob = paddle.fluid.layers.mul(log_prob, td_error)
-        # print(td_error.shape, log_prob.shape)
-        # neg_log_prob = log_prob * td_error * -1.0
-        neg_log_prob = log_prob
+        lprobs = fluid.layers.log(self.probs)  # log operation 1*8
+        print(lprobs.shape)
+        log_prob = fluid.layers.reduce_max(lprobs, dim=1, keep_dim=True)
+        log_prob.stop_gradient = True
+        print(log_prob.shape)
+
+        print(td_error.shape)
+
+        neg_log_prob = fluid.layers.reduce_mean(log_prob * td_error * -1.0)
+        print(neg_log_prob.shape)
 
         # define optimizer
         optimizer = fluid.optimizer.Adam(learning_rate=0.0001)
@@ -70,8 +79,6 @@ class Actor(object):
         self.train_program_actor = fluid.default_main_program()
 
         # fluid exe
-        place = fluid.CPUPlace()
-        self.exe = fluid.Executor(place)
         self.exe.run(fluid.default_startup_program())
 
     def train(self, state, a_cx, a_hx, td_error):
@@ -109,11 +116,19 @@ class Critic(object):
 
 
     def build_net(self):
-        s, s_, reward, gamma= self.get_input()
+        s, s_, reward, gamma = self.get_input()
+        reward = fluid.layers.reduce_max(reward, dim=0)
+        # print(reward.shape)
+
+        gamma = fluid.layers.reduce_max(gamma, dim=0)
+        # print(gamma.shape)
+
         v_curr, c_hx, c_cx = self.predict_values(s, self.c_hx, self.c_cx)
         v_next, self.c_hx, self.c_cx = self.predict_values(s_, c_hx, c_cx)
+        v_curr.stop_gradient = True
+        v_next.stop_gradient = True
         self.td_error = reward + gamma * v_next - v_curr
-
+        # print(self.td_error.shape)
         # define optimizer
         optimizer = fluid.optimizer.Adam(learning_rate=0.0001)
         optimizer.minimize(self.td_error)
@@ -135,9 +150,8 @@ class Critic(object):
 
         hx, cx = fluid.layers.lstm_unit(x_t=a_fc5, hidden_t_prev=c_hx, cell_t_prev=c_cx)
         state = hx
-        fc = fluid.layers.fc(input=state, size=1)
-        value = fluid.layers.softmax(input=fc)
-        return value, cx, hx
+        value = fluid.layers.fc(input=state, size=1)
+        return fluid.layers.reduce_max(value, dim=1), cx, hx
 
     def train(self, current_state, next_state, reward, c_cx, c_hx, gamma):
         self.exe.run(self.train_program_critic,

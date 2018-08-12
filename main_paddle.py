@@ -21,6 +21,7 @@ ENV = environment.env([21, 14], [45, 87], 999)
 action_dic = ['up', 'upright', 'right', 'rightdown', 'down', 'downleft', 'left', 'leftup']
 GAMMA = 0.99
 
+
 if __name__ == '__main__':
 
     # define input data and variable
@@ -32,10 +33,11 @@ if __name__ == '__main__':
 
     while True:
 
-        current_state = ENV.reset(start_loc=value_point[15], target=[48, 46], time=1)
+        current_state = np.array(ENV.reset(start_loc=value_point[15], target=[48, 46], time=1), dtype='float32')
 
         for step in range(10000):
             # get real action
+
             real_action = actor.act(current_state)
 
             next_state, reward, done, info = ENV.step(real_action)
