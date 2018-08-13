@@ -191,6 +191,8 @@ class env:
             tmp1 = Image.fromarray(tmp).resize((800, 800))
 
             if is_test:
+                if not os.path.exists(self.args.result_dir):
+                    os.mkdir(self.args.result_dir)
                 tmp2 = tmp1.convert(mode = "L")
                 tmp2.save(self.args.result_dir + 'test_episode_{}_step_{}'.format(episode, step) + '.png')
 

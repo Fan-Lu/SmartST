@@ -36,6 +36,7 @@ if __name__ == '__main__':
     value_point = ENV.data_base.value_point
     episode = 0
     stop_all_flag = False
+    is_test = False
     # actor.eval()
     # actor.load_state_dict(torch.load('model_saved_rl/suc_model_802.pth'))
 
@@ -60,7 +61,7 @@ if __name__ == '__main__':
             log_prob = lporbs.gather(1, action)
 
             real_action = action_dic[int(action.cpu().data.numpy())]
-            s_, r, done, info, success = ENV.step(real_action, episode, step, args.is_test)   # True: Read terminal
+            s_, r, done, info, success = ENV.step(real_action, episode, step, is_test)   # True: Read terminal
             s_ = Variable(torch.from_numpy(np.array(s_))).view(1, 3, 100, 100).float().cuda()
 
             v_curr, (c_hx, c_cx) = critic((s, (c_hx, c_cx)))
@@ -100,6 +101,8 @@ if __name__ == '__main__':
             actor.eval()
             actor.load_state_dict(torch.load('model_saved_rl/suc_model_{}.pth'.format(episode-1)))
 
+            is_test = True
+
             while True:
                 a = np.random.randint(0, 1000, 1).max()
                 # [48, 46] [46, 60]
@@ -121,7 +124,7 @@ if __name__ == '__main__':
                     log_prob = lporbs.gather(1, action)
 
                     real_action = action_dic[int(action.cpu().data.numpy())]
-                    s_, r, done, info, success = ENV.step(real_action, episode, step, args.is_test)  # True: Read terminal
+                    s_, r, done, info, success = ENV.step(real_action, episode, step, is_test)  # True: Read terminal
                     s_ = Variable(torch.from_numpy(np.array(s_))).view(1, 3, 100, 100).float().cuda()
                     s = s_
 

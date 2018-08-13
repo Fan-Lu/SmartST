@@ -24,7 +24,6 @@ def GetConfiguration():
 
     parser.add_argument('--lrate', metavar='learning rate', default=0.00001, type=float, help='learning rate')
     parser.add_argument('--GAMMA', metavar='gamma', default=0.99, type=float, help='discount factor')
-    parser.add_argument('--is-test', default=True, type=bool, help='test flag')
 
     args = parser.parse_args()
 
