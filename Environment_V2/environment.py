@@ -87,11 +87,11 @@ def shuchuCSV(data_array, file_name='tmp'):
         for i in range(data_array.shape[0]):
             writer.writerow([data_array[0]])
 
-global enviroment_example # a shared global load class for all env
+global enviroment_example  # a shared global load class for all env
 enviroment_example = enviroment('Environment_V2')
 
 class env:
-    action_space = {'up': [0, 1], 'upright': [1, 1], 'right': [1, 0], 'rightdown': [1, -1], 'down': [0, -1], 'downleft':[-1, -1], 'left': [-1, 0], 'leftup': [-1, 1]}
+
     '''
     action space indicate all possible action
     initial parameters:
@@ -103,7 +103,7 @@ class env:
     plot: if set true, our env will show a display windows.
     sleep: TO DO ISSUE
     '''
-    def __init__(self, start_loc, target, time, alpha = 0.5, time_factor= 0.1, sleep = 0.5, args=None):
+    def __init__(self, start_loc, target, time, alpha=0.5, time_factor=0.1, plot=True, sleep=0.5):
         self.start = start_loc
         self.record = start_loc
         self.target = target
@@ -111,20 +111,19 @@ class env:
         self.data_base = enviroment_example
         self.observation = [self.data_base.geinitupian(time), self.target_and_loc(target), self.target_and_loc(start_loc)]
         self.alpha = alpha
-        self.args = args
-
+        self.action_space = {'up': [0, 1], 'upright': [1, 1], 'right': [1, 0], 'rightdown': [1, -1], 'down': [0, -1],
+                    'downleft': [-1, -1], 'left': [-1, 0], 'leftup': [-1, 1]}
         if self.end_my_travel(start_loc):
             self.terminate = True
         else:
             self.terminate = False
         self.time_factor = time_factor
-
-        self.plot = self.args.use_plt
-        if self.plot:
+        if plot:
             self.sleep = sleep
+            self.plot = plot
             self.cache = self.observation[0]
             self.root = tk.Tk()
-            self.canvas = tk.Canvas(self.root, bg="white",height=900, width=900)
+            self.canvas = tk.Canvas(self.root, bg="white", height=900, width=900)
             self.canvas.pack()
             tmp = self.observation[0]
             tmp[self.start[0], self.start[1]] = 255
@@ -132,10 +131,8 @@ class env:
             tmp1 = Image.fromarray(tmp).resize((800, 800))
             # tmp1.show()
             img = ImageTk.PhotoImage(tmp1)
-            # img = ImageTk.PhotoImage(Image.fromarray(tmp).resize((800, 800)))\
             self.canv_img = self.canvas.create_image(20, 20, anchor='nw', image=img)
             self.root.update()
-
 
     def reset(self, start_loc, target, time):
         # To reset or env's location, target and time.
@@ -153,28 +150,31 @@ class env:
             self.canvas.delete(self.canv_img)
             tmp = self.observation[0] - self.cache
             self.cache = self.observation[0]
-            tmp = self.observation[0] * 2 + tmp * 200
+            tmp = self.observation[0] * 2 +tmp * 2000
             tmp[tmp < 0] = 0
             tmp[tmp >= 255] = 255
             tmp[self.start[0], self.start[1]] = 255
             tmp[self.target[0], self.target[1]] = 255
             tmp1 = Image.fromarray(tmp).resize((800, 800))
+            # tmp1.show()
             img = ImageTk.PhotoImage(tmp1)
             self.canv_img = self.canvas.create_image(20, 20, anchor='nw', image=img)
-
             self.root.update()
         return self.observation
 
     def end_my_travel(self, loc):
-        # decide if we have fall into a jam or we have approached our target.
-        if self.observation[0][loc[0], loc[1]] == 0 or np.sqrt(np.square(loc[0] - self.target[0])+np.square(loc[1] - self.target[1]))<3 :
-            a = self.observation[0][loc[0], loc[1]]
-            b = np.sqrt(np.square(loc[0] - self.target[0])+np.square(loc[1] - self.target[1]))
+        """
+        Decide whether our interaction is done!
+        :param loc: list
+        :return: boolean
+        """
+        if self.observation[0][loc[0], loc[1]] == 0 or \
+                np.sqrt(np.square(loc[0] - self.target[0])+np.square(loc[1] - self.target[1])) < 3:  # todo, change 3
             return True
         else:
             return False
 
-    def step(self, move, episode, step, is_test):
+    def step(self, move):
         # One step
         reward = self.calculate_reward(self.action_space[move])
         success = False
@@ -183,22 +183,16 @@ class env:
             self.canvas.delete(self.canv_img)
             tmp = self.observation[0] - self.cache
             self.cache = self.observation[0]
-            tmp = self.observation[0] * 2 + tmp * 200
+            tmp = self.observation[0] * 2 + tmp * 2000
             tmp[tmp < 0] = 0
             tmp[tmp >= 255] = 255
             tmp[self.start[0], self.start[1]] = 255
             tmp[self.target[0], self.target[1]] = 255
             tmp1 = Image.fromarray(tmp).resize((800, 800))
-
-            if is_test:
-                if not os.path.exists(self.args.result_dir):
-                    os.mkdir(self.args.result_dir)
-                tmp2 = tmp1.convert(mode = "L")
-                tmp2.save(self.args.result_dir + 'test_episode_{}_step_{}'.format(episode, step) + '.png')
-
+            # tmp1.show()
             img = ImageTk.PhotoImage(tmp1)
+            # img = ImageTk.PhotoImage(Image.fromarray(tmp).resize((800, 800)))
             self.canv_img = self.canvas.create_image(20, 20, anchor='nw', image=img)
-
             self.root.update()
 
         if self.end_my_travel(self.start) and self.observation[0][self.start[0], self.start[1]] != 0:
@@ -215,16 +209,19 @@ class env:
         return reward
 
     def calculate_reward(self, move):
+        #  todo, modify
         tmp = self.data_base.geinitupian(self.time)
+
+        # todo
         dis = np.sqrt(np.square(self.start[0] - self.target[0]) + np.square(self.start[1] - self.target[1]))
         after = np.sqrt(np.square(self.start[0] + move[0] - self.target[0]) + np.square(self.start[1] + move[1] - self.target[1]))
-        dis_reward = dis - after
+        dis_reward = dis - after  # distance difference
 
         txx = tmp[self.start[0]+move[0], self.start[1]+move[1]]
-        time_cost_xx = 50 / txx
+        time_cost_xx = 50.0 / (txx + 0.0001)  # todo ?
 
-        time_reward = - 50 / (tmp[self.start[0]+move[0], self.start[1]+move[1]] + 1e-7 ) # 50 is block length
-        if time_reward < punishment:
+        time_reward = - 50 / (tmp[self.start[0]+move[0], self.start[1]+move[1]] + 1e-7)  # 50 is block length
+        if time_reward < punishment:  # todo ?
             self.terminate = True
             self.observation = [self.observation[0], self.observation[1], self.target_and_loc(self.start)]
             final = self.final_reward()
@@ -232,10 +229,30 @@ class env:
         reward = dis_reward * self.alpha + self.time_factor * time_reward * (1 - self.alpha)
         self.time -= time_reward
         self.start = [self.start[0] + move[0], self.start[1] + move[1]]
-        self.observation=[self.data_base.geinitupian(self.time), self.observation[1], self.target_and_loc(self.start)]
+        self.observation = [self.data_base.geinitupian(self.time), self.observation[1], self.target_and_loc(self.start)]
         return reward
 
-    def target_and_loc(self, loc, width = 5, block_size=[100, 100]):
+    def get_moveable_list(self):
+        """
+        This function will return moveable list according to current state. e.g. filtering zero points
+        :return: list
+        """
+        current_loc = [self.start[0], self.start[1]]
+        current_velocity = self.observation[0]  # get velocity image
+        current_velocity[current_velocity < 0] = 0
+        current_velocity[current_velocity >= 255] = 255
+        r_l = [0 for _ in range(8)]
+        # action_space = {'up': [0, 1], 'upright': [1, 1], 'right': [1, 0], 'rightdown': [1, -1], 'down': [0, -1],
+        #             'downleft': [-1, -1], 'left': [-1, 0], 'leftup': [-1, 1]}
+        i = 0
+        for ele in self.action_space:
+            temp_loc = np.array(current_loc) + np.array(self.action_space[ele])
+            if current_velocity[temp_loc[0], temp_loc[1]] != 0:
+                r_l[i] = 1
+            i += 1
+        return np.array(r_l, dtype='float32')
+
+    def target_and_loc(self, loc, width=5, block_size=[100, 100]):
         # translate our location into a matrix.
         assert type(loc) == list and loc.__len__()==2 and loc[0]>=0 and loc[0]<=(block_size[0]-1) and loc[1]>=0 and loc[1]<=(block_size[1]-1), "Input must be a list, and it must has two eligible int number"
         tmp = np.zeros([block_size[0]+width*2, block_size[1]+width*2])
