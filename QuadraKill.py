@@ -33,15 +33,18 @@ if __name__ == '__main__':
     value_point = ENV.data_base.value_point
     length = len(value_point)
     episode = 0
+    np.random.seed(1)
 
     while True:
-        a = random.randint(0, length)
-        b = random.randint(0, length)
-        Time = random.randint(0, 100000)
+        a = np.random.randint(0, length)
+        b = np.random.randint(0, length)
+        Time = np.random.randint(0, 100000)
         if a==b:
-            break
+            print('Zhao equals SillyB')
+            continue
         s, valid_action = ENV.reset(start_loc=value_point[a], target=value_point[b], time=Time)
-
+        if np.sum(valid_action) == 0:
+            continue
         a_cx = Variable(torch.zeros(1, 256)).cuda()
         a_hx = Variable(torch.zeros(1, 256)).cuda()
 
@@ -58,7 +61,7 @@ if __name__ == '__main__':
             value, (c_hx, c_cx) = critic((s, (c_hx, c_cx)))
             probs, (a_hx, a_cx) = actor((s, (a_hx, a_cx)))
 
-            mask = torch.Tensor(valid_action).cuda().view(1, 8)
+            mask = Variable(torch.from_numpy(valid_action)).cuda().view(1, 8)
             masked_probs = probs * mask
 
             action = masked_probs.multinomial(1)
@@ -83,7 +86,7 @@ if __name__ == '__main__':
                     os.mkdir('/home/exx/Lab/SmartST/model_saved_rl')
                 torch.save(actor.state_dict(), '/home/exx/Lab/SmartST/model_saved_rl/' + 'suc_model_{:d}.pth'.format(episode))
 
-            if done:
+            if done or (step + 1) % 100 == 0:
                 episode += 1
                 break
 
