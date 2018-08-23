@@ -30,8 +30,8 @@ class Actor(nn.Module):
 
         state = state.view(-1, 32*7*7)
         hx, cx = self.a_lstm(state, (hx, cx))
-        state = hx
-        probs = F.softmax(self.actor_linear(state))
+
+        probs = F.softmax(self.actor_linear(hx))
 
         return probs, (hx, cx)
 

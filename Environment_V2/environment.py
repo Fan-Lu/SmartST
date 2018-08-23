@@ -160,7 +160,7 @@ class env:
             img = ImageTk.PhotoImage(tmp1)
             self.canv_img = self.canvas.create_image(20, 20, anchor='nw', image=img)
             self.root.update()
-        return self.observation
+        return self.observation, self.get_moveable_list()
 
     def end_my_travel(self, loc):
         """
@@ -200,7 +200,7 @@ class env:
             self.terminate = True
             success = True
 
-        return self.observation, reward, self.terminate, [self.start, self.target], success
+        return self.observation, reward, self.terminate, [self.start, self.target, self.get_moveable_list()], success
 
     def final_reward(self):
         finished_part = ((self.record[0] - self.start[0])**2 + (self.record[1] - self.start[1])**2)**0.5
@@ -239,15 +239,21 @@ class env:
         """
         current_loc = [self.start[0], self.start[1]]
         current_velocity = self.observation[0]  # get velocity image
+
+        '''
+            no need for normalization here, because I normalization that numbers just for plot and UI.
+            If you just use it to train, no need for this
         current_velocity[current_velocity < 0] = 0
         current_velocity[current_velocity >= 255] = 255
+        '''
         r_l = [0 for _ in range(8)]
         # action_space = {'up': [0, 1], 'upright': [1, 1], 'right': [1, 0], 'rightdown': [1, -1], 'down': [0, -1],
         #             'downleft': [-1, -1], 'left': [-1, 0], 'leftup': [-1, 1]}
         i = 0
         for ele in self.action_space:
             temp_loc = np.array(current_loc) + np.array(self.action_space[ele])
-            if current_velocity[temp_loc[0], temp_loc[1]] != 0:
+            if temp_loc[0]<100 and temp_loc[0]>=0 and temp_loc[1]<100 and temp_loc[1]>=0 and current_velocity[temp_loc[0], temp_loc[1]] != 0:
+                ## if we will enlarge the map later, we have to modify the 100 here
                 r_l[i] = 1
             i += 1
         return np.array(r_l, dtype='float32')

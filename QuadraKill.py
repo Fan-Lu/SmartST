@@ -8,6 +8,7 @@ import torch
 import torch.optim as optim
 from torch.autograd import Variable
 import torch.nn.functional as F
+import random
 
 from Agent.ac import Actor, Critic
 
@@ -30,10 +31,16 @@ if __name__ == '__main__':
     critic.train()
 
     value_point = ENV.data_base.value_point
+    length = len(value_point)
     episode = 0
 
     while True:
-        s = ENV.reset(start_loc=value_point[15], target=[48, 46], time=1)
+        a = random.randint(0, length)
+        b = random.randint(0, length)
+        Time = random.randint(0, 100000)
+        if a==b:
+            break
+        s, valid_action = ENV.reset(start_loc=value_point[a], target=value_point[b], time=Time)
 
         a_cx = Variable(torch.zeros(1, 256)).cuda()
         a_hx = Variable(torch.zeros(1, 256)).cuda()
@@ -46,17 +53,21 @@ if __name__ == '__main__':
         all_entropies = []
         all_lprobs = []
 
-        for step in range(10000):
+        for step in range(100):
             s = Variable(torch.from_numpy(np.array(s))).view(1, 3, 100, 100).float().cuda()
             value, (c_hx, c_cx) = critic((s, (c_hx, c_cx)))
             probs, (a_hx, a_cx) = actor((s, (a_hx, a_cx)))
-            action = probs.multinomial(1)
+
+            mask = torch.Tensor(valid_action).cuda().view(1, 8)
+            masked_probs = probs * mask
+
+            action = masked_probs.multinomial(1)
             lporbs = torch.log(probs)
             log_prob = lporbs.gather(1, action)
             entropy = -(log_prob * probs).sum(1)
 
             real_action = action_dic[int(action.cpu().data.numpy())]
-            s_, r, done, info, success = ENV.step(real_action)   # True: Read terminal
+            s_, r, done, [_, _, valid_action], success = ENV.step(real_action)   # True: Read terminal
 
             all_rewards.append(r)
             all_values.append(value)
@@ -78,7 +89,8 @@ if __name__ == '__main__':
 
         R = Variable(torch.zeros(1, 1)).cuda()
         if not done:
-            value, (_, _) = critic(s, (c_hx, c_cx))
+            s = Variable(torch.from_numpy(np.array(s))).view(1, 3, 100, 100).float().cuda()
+            value, (_, _) = critic((s, (c_hx, c_cx)))
             R = value
         all_values.append(R)
         policy_loss = 0
@@ -103,6 +115,8 @@ if __name__ == '__main__':
         critic.zero_grad()
         value_loss.backward(retain_graph=True)
         c_opt.step()
+
+
 
         if (episode + 1) % 1000 == 0:
             if not os.path.exists('/home/exx/Lab/SmartST/model_saved_rl'):
