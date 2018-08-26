@@ -118,9 +118,9 @@ class env:
         else:
             self.terminate = False
         self.time_factor = time_factor
-        if plot:
+        self.plot = plot
+        if self.plot:
             self.sleep = sleep
-            self.plot = plot
             self.cache = self.observation[0]
             self.root = tk.Tk()
             self.canvas = tk.Canvas(self.root, bg="white", height=900, width=900)
