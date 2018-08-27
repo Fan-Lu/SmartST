@@ -48,13 +48,14 @@ if __name__ == '__main__':
     reward_record_tmp = []
 
     while True:
+
         a = np.random.randint(0, length)
         b = np.random.randint(0, length)
         Time = np.random.randint(0, 10000)
         if a==b:
             print('Zhao equals SillyB')
             continue
-        s, valid_action = ENV.reset(start_loc=value_point[a], target=value_point[b], time=Time)
+        s, valid_action = ENV.reset(start_loc=value_point[a], target=value_point[b], time=10)
         if np.sum(valid_action) == 0:
             print("shibai")
             continue
@@ -84,7 +85,6 @@ if __name__ == '__main__':
 
             real_action = action_dic[int(action.cpu().data.numpy())]
             s_, r, done, [_, _, valid_action], success = ENV.step(real_action)   # True: Read terminal
-
             if np.sum(valid_action) == 0: # used to deal with the environment's dirty data.
                 break
 
@@ -137,7 +137,7 @@ if __name__ == '__main__':
 
         p_loss_tmp.append(policy_loss.data)
         v_loss_tmp.append(value_loss.data)
-        reward_record_tmp.append(r)
+        reward_record_tmp.append(sum(all_rewards)/all_rewards.__len__())
 
         if (episode+1) % 50 == 0:
             tmp_v_loss = sum(v_loss_tmp)/v_loss_tmp.__len__()

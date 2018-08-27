@@ -7,8 +7,8 @@ import time
 import tkinter as tk
 
 global punishment
-punishment = -1000
-Reward = 1000
+punishment = -1
+Reward = 1
 
 
 class enviroment():
@@ -103,7 +103,7 @@ class env:
     plot: if set true, our env will show a display windows.
     sleep: TO DO ISSUE
     '''
-    def __init__(self, start_loc, target, time, alpha=0.5, time_factor=0.1, plot=True, sleep=0.5):
+    def __init__(self, start_loc, target, time, alpha=0.9, time_factor=0.1, plot=True, sleep=0.5):
         self.start = start_loc
         self.record = start_loc
         self.target = target
@@ -111,6 +111,7 @@ class env:
         self.data_base = enviroment_example
         self.observation = [self.data_base.geinitupian(time), self.target_and_loc(target), self.target_and_loc(start_loc)]
         self.alpha = alpha
+        self.action_space_name = ['up', 'upright', 'right', 'rightdown', 'down', 'downleft', 'left', 'leftup']
         self.action_space = {'up': [0, 1], 'upright': [1, 1], 'right': [1, 0], 'rightdown': [1, -1], 'down': [0, -1],
                     'downleft': [-1, -1], 'left': [-1, 0], 'leftup': [-1, 1]}
         if self.end_my_travel(start_loc):
@@ -221,7 +222,7 @@ class env:
         time_cost_xx = 50.0 / (txx + 0.0001)  # todo ?
 
         time_reward = - 50 / (tmp[self.start[0]+move[0], self.start[1]+move[1]] + 1e-7)  # 50 is block length
-        if time_reward < punishment:  # todo ?
+        if time_reward < -1e5:  # todo ?
             self.terminate = True
             self.observation = [self.observation[0], self.observation[1], self.target_and_loc(self.start)]
             final = self.final_reward()
@@ -250,7 +251,7 @@ class env:
         # action_space = {'up': [0, 1], 'upright': [1, 1], 'right': [1, 0], 'rightdown': [1, -1], 'down': [0, -1],
         #             'downleft': [-1, -1], 'left': [-1, 0], 'leftup': [-1, 1]}
         i = 0
-        for ele in self.action_space:
+        for ele in self.action_space_name:
             temp_loc = np.array(current_loc) + np.array(self.action_space[ele])
             if temp_loc[0]<100 and temp_loc[0]>=0 and temp_loc[1]<100 and temp_loc[1]>=0 and current_velocity[temp_loc[0], temp_loc[1]] != 0:
                 ## if we will enlarge the map later, we have to modify the 100 here
