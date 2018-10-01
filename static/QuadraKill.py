@@ -8,21 +8,22 @@ import torch
 import torch.optim as optim
 from torch.autograd import Variable
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import random
 
 from Agent.ac import Actor, Critic
 
-torch.cuda.set_device(3)
+# torch.cuda.set_device(3)
 actor = Actor(A_DIM=8).cuda()
 critic = Critic().cuda()
 
-a_opt = optim.Adam(actor.parameters(), lr=0.001)
-c_opt = optim.Adam(critic.parameters(), lr=0.001)
+a_opt = optim.Adam(actor.parameters(), lr=0.00001)
+c_opt = optim.Adam(critic.parameters(), lr=0.00001)
 
-ENV = environment.env([21, 14], [45, 87], 999, plot=False)
+
+ENV = environment.env(start_loc=[21, 14], target=[35, 67], time=10, plot=True)
 
 action_dic = ['up', 'upright', 'right', 'rightdown', 'down', 'downleft', 'left', 'leftup']
 saved_dict = "saved_model"
@@ -31,7 +32,9 @@ saved_fig = "saved_figure"
 GAMMA = 0.99
 TAU = 1.0
 EnCOEF = 0.01
-max_times = 100
+max_times = 200
+
+dic_pair = []
 
 if __name__ == '__main__':
     actor.train()
@@ -50,17 +53,21 @@ if __name__ == '__main__':
     v_loss_tmp = []
     reward_record_tmp = []
 
-    while True:
+    success = True
+    a = np.random.randint(0, length)  # start point
+    b = np.random.randint(0, length)  # end point
 
-        a = np.random.randint(0, length)
-        b = np.random.randint(0, length)
-        Time = np.random.randint(0, 10000)
-        if a==b:
-            print('a equals b, this is ridiculous')
-            continue
-        s, valid_action = ENV.reset(start_loc=value_point[a], target=value_point[b], time=10)
+    while True:
+        if success:
+            a = np.random.randint(0, length)  # start point
+            b = np.random.randint(0, length)  # end point
+            Time = np.random.randint(0, 10000)
+            if a == b:
+                print('Failed in sampling target and goal!')
+                continue
+        s, valid_action = ENV.reset(start_loc=value_point[int(a)], target=value_point[int(b)], time=10)
         if np.sum(valid_action) == 0:
-            print("shibai")
+            print("Failure")
             continue
         a_cx = Variable(torch.zeros(1, 256)).cuda()
         a_hx = Variable(torch.zeros(1, 256)).cuda()
@@ -98,7 +105,7 @@ if __name__ == '__main__':
 
             s = s_
 
-            # print('Episode: {} Step: {} Aciton: {}'.format(episode, step, real_action))
+            print('Episode: {} Step: {} Target: {} Goal: {} Aciton: {}'.format(episode, step, value_point[int(a)], value_point[int(b)], real_action))
 
             # if success:
             #     if not os.path.exists('/home/exx/Lab/SmartST/model_saved_rl'):

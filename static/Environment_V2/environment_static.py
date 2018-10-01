@@ -79,13 +79,13 @@ class env:
             self.canvas = tk.Canvas(self.root, bg="white", height=900, width=900)
             self.canvas.pack()
             tmp = self.observation[0]
-            tmp[self.start[0], self.start[1]] = 255
-            tmp[self.target[0], self.target[1]] = 255
+            # tmp[self.start[0], self.start[1]] = 255
+            # tmp[self.target[0], self.target[1]] = 255
             tmp1 = Image.fromarray(tmp).resize((800, 800))
             # tmp1.show()
             img = ImageTk.PhotoImage(tmp1)
             self.canv_img = self.canvas.create_image(20, 20, anchor='nw', image=img)
-            self.root.update()
+            # self.root.update()
 
     def reset(self, start_loc, target, time):
         # To reset or env's location, target and time.
