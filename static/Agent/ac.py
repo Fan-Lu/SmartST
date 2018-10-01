@@ -102,17 +102,40 @@ class ResNet(nn.Module):
 class Actor(nn.Module):
     def __init__(self, S_DIM=3, A_DIM=4):
         super(Actor, self).__init__()
+        self.conv1 = nn.Conv2d(S_DIM, 48, kernel_size=11, stride=4, bias=False)
+        self.bn1 = nn.BatchNorm2d(48)
+        self.relu1 = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(48, 128, kernel_size=5, bias=False)
+        self.bn2 = nn.BatchNorm2d(128)
+        self.relu2 = nn.ReLU(inplace=True)
+        self.conv3 = nn.Conv2d(128, 64, kernel_size=3, bias=False)
+        self.bn3 = nn.BatchNorm2d(64)
 
-        self.a_resnet = ResNet(BasicBlock, S_DIM, [3, 3, 3, 3])
-        self.a_lstm = nn.LSTMCell(512, 256)
-        self.actor_linear = nn.Linear(256, A_DIM)
+        self.fc1 = nn.Linear(64*17*17, 512)
+        self.relu3 = nn.ReLU(inplace=False)
+        self.fc2 = nn.Linear(512, 256)
+        self.relu4 = nn.ReLU(inplace=False)
+        self.fc3 = nn.Linear(256, A_DIM)
+
 
     def forward(self, input):
         state, (hx, cx) = input
-        state = self.a_resnet(state)
-        hx, cx = self.a_lstm(state, (hx, cx))
+        state = self.conv1(state)
+        state = self.bn1(state)
+        state = self.relu1(state)
 
-        probs = F.softmax(self.actor_linear(hx))
+        state = self.conv2(state)
+        state = self.bn2(state)
+        state = self.relu2(state)
+
+        state = self.conv3(state)
+        state = self.bn3(state)
+
+        state = state.view(-1, 64*17*17)
+        state = self.relu3(self.fc1(state))
+        state = self.relu4(self.fc2(state))
+        probs = F.softmax(self.fc3(state))
+
 
         return probs, (hx, cx)
 
@@ -121,17 +144,38 @@ class Critic(nn.Module):
     def __init__(self, S_DIM=3):
         super(Critic, self).__init__()
 
-        self.c_resnet = ResNet(BasicBlock, S_DIM, [3, 3, 3, 3])
-        self.c_lstm = nn.LSTMCell(512, 256)
-        self.critic_linear = nn.Linear(256, 1)
+        self.conv1 = nn.Conv2d(S_DIM, 48, kernel_size=11, stride=4, bias=False)
+        self.bn1 = nn.BatchNorm2d(48)
+        self.relu1 = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(48, 128, kernel_size=5, bias=False)
+        self.bn2 = nn.BatchNorm2d(128)
+        self.relu2 = nn.ReLU(inplace=True)
+        self.conv3 = nn.Conv2d(128, 64, kernel_size=3, bias=False)
+        self.bn3 = nn.BatchNorm2d(64)
+
+        self.fc1 = nn.Linear(64*17*17, 512)
+        self.relu3 = nn.ReLU(inplace=False)
+        self.fc2 = nn.Linear(512, 256)
+        self.relu4 = nn.ReLU(inplace=False)
+        self.fc3 = nn.Linear(256, 1)
 
     def forward(self, input):
         state, (hx, cx) = input
-        state = self.c_resnet(state)
-        hx, cx = self.c_lstm(state, (hx, cx))
-        state = hx
+        state = self.conv1(state)
+        state = self.bn1(state)
+        state = self.relu1(state)
 
-        value = self.critic_linear(state)
+        state = self.conv2(state)
+        state = self.bn2(state)
+        state = self.relu2(state)
+
+        state = self.conv3(state)
+        state = self.bn3(state)
+
+        state = state.view(-1, 64*17*17)
+        state = self.relu3(self.fc1(state))
+        state = self.relu4(self.fc2(state))
+        value = self.fc3(state)
 
         return value, (hx, cx)
 
