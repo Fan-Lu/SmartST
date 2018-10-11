@@ -8,6 +8,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 import math
 import torch.optim as optim
+from torchvision import transforms
 
 
 class BasicBlock(nn.Module):
@@ -113,8 +114,10 @@ class Actor(nn.Module):
 
         self.fc1 = nn.Linear(64*17*17, 512)
         self.relu3 = nn.ReLU(inplace=False)
+        self.lnfc1 = nn.LayerNorm(512)
         self.fc2 = nn.Linear(512, 256)
         self.relu4 = nn.ReLU(inplace=False)
+        self.lnfc2 = nn.LayerNorm(256)
         self.fc3 = nn.Linear(256, A_DIM)
 
 
@@ -132,8 +135,8 @@ class Actor(nn.Module):
         state = self.bn3(state)
 
         state = state.view(-1, 64*17*17)
-        state = self.relu3(self.fc1(state))
-        state = self.relu4(self.fc2(state))
+        state = self.lnfc1(self.relu4(self.fc1(state)))
+        state = self.lnfc2(self.relu4(self.fc2(state)))
         probs = F.softmax(self.fc3(state))
 
 
@@ -155,8 +158,10 @@ class Critic(nn.Module):
 
         self.fc1 = nn.Linear(64*17*17, 512)
         self.relu3 = nn.ReLU(inplace=False)
+        self.lnfc1 = nn.LayerNorm(512)
         self.fc2 = nn.Linear(512, 256)
         self.relu4 = nn.ReLU(inplace=False)
+        self.lnfc2 = nn.LayerNorm(256)
         self.fc3 = nn.Linear(256, 1)
 
     def forward(self, input):
@@ -173,8 +178,8 @@ class Critic(nn.Module):
         state = self.bn3(state)
 
         state = state.view(-1, 64*17*17)
-        state = self.relu3(self.fc1(state))
-        state = self.relu4(self.fc2(state))
+        state = self.lnfc1(self.relu4(self.fc1(state)))
+        state = self.lnfc2(self.relu4(self.fc2(state)))
         value = self.fc3(state)
 
         return value, (hx, cx)

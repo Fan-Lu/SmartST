@@ -7,23 +7,26 @@ import numpy as np
 import torch
 import torch.optim as optim
 from torch.autograd import Variable
-import matplotlib
-# matplotlib.use('Agg')
+from torchvision import transforms
+
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 import torch.nn.functional as F
 import random
 
 from Agent.ac import Actor, Critic
 
-# torch.cuda.set_device(3)
-actor = Actor(A_DIM=8).cuda()
-critic = Critic().cuda()
+device = torch.device("cuda:0")
+actor = Actor(A_DIM=8).to(device)
+critic = Critic().cuda().to(device)
 
 a_opt = optim.Adam(actor.parameters(), lr=0.00001)
 c_opt = optim.Adam(critic.parameters(), lr=0.00001)
 
+ToImag = transforms.ToPILImage()
+data_norm = transforms.Normalize(0, 1)
 
-ENV = environment.env(start_loc=[21, 14], target=[35, 67], time=10, plot=True)
+ENV = environment.env(start_loc=[21, 14], target=[35, 67], time=10, plot=False)
 
 action_dic = ['up', 'upright', 'right', 'rightdown', 'down', 'downleft', 'left', 'leftup']
 saved_dict = "saved_model"
@@ -54,26 +57,33 @@ if __name__ == '__main__':
     reward_record_tmp = []
 
     success = True
-    a = np.random.randint(0, length)  # start point
-    b = np.random.randint(0, length)  # end point
+    # a = np.random.randint(0, length)  # start point
+    # b = np.random.randint(0, length)  # end point
+
+    failure_count = 0
 
     while True:
-        if success:
-            a = np.random.randint(0, length)  # start point
-            b = np.random.randint(0, length)  # end point
-            Time = np.random.randint(0, 10000)
-            if a == b:
-                print('Failed in sampling target and goal!')
-                continue
-        s, valid_action = ENV.reset(start_loc=value_point[int(a)], target=value_point[int(b)], time=10)
+        # if success or failure_count > 100:
+        start_index = np.random.randint(0, length)  # start point
+        target_index = np.random.randint(0, length)  # end point
+        Time = np.random.randint(0, 10000)
+
+        failure_count = 0
+        if start_index == target_index:
+            print('Failed in sampling target and goal!')
+            continue
+        # else:
+        failure_count += 1
+
+        s, valid_action = ENV.reset(start_loc=value_point[int(start_index)], target=value_point[int(target_index)], time=10)
         if np.sum(valid_action) == 0:
             print("Failure")
             continue
-        a_cx = Variable(torch.zeros(1, 256)).cuda()
-        a_hx = Variable(torch.zeros(1, 256)).cuda()
+        a_cx = torch.zeros(1, 256).to(device)
+        a_hx = torch.zeros(1, 256).to(device)
 
-        c_cx = Variable(torch.zeros(1, 256)).cuda()
-        c_hx = Variable(torch.zeros(1, 256)).cuda()
+        c_cx = torch.zeros(1, 256).to(device)
+        c_hx = torch.zeros(1, 256).to(device)
 
         all_rewards = []
         all_values = []
@@ -81,11 +91,17 @@ if __name__ == '__main__':
         all_lprobs = []
 
         for step in range(max_times):
-            s = Variable(torch.from_numpy(np.array(s))).view(1, 3, 100, 100).float().cuda()
+
+            s = np.array(s)
+            mean = np.resize([np.mean(s[i]) for i in range(3)], (3, 1, 1))
+            std = np.resize([np.std(s[i]) for i in range(3)], (3, 1, 1))
+            s = (s - mean) / std # Data Normalization
+            s = torch.from_numpy(s).view(1, 3, 100, 100).float().to(device)
+
             value, (c_hx, c_cx) = critic((s, (c_hx, c_cx)))
             probs, (a_hx, a_cx) = actor((s, (a_hx, a_cx)))
 
-            mask = Variable(torch.from_numpy(valid_action)).cuda().view(1, 8)
+            mask = torch.from_numpy(valid_action).view(1, 8).to(device)
             masked_probs = probs * mask
 
             action = masked_probs.multinomial(1)
@@ -105,7 +121,9 @@ if __name__ == '__main__':
 
             s = s_
 
-            print('Episode: {} Step: {} Target: {} Goal: {} Aciton: {}'.format(episode, step, value_point[int(a)], value_point[int(b)], real_action))
+            # print('Episode: {} Step: {} Target: {} Goal: {} Aciton: {}'.
+            #       format(episode, step, value_point[int(start_index)],
+            #              value_point[int(target_index)], real_action))
 
             # if success:
             #     if not os.path.exists('/home/exx/Lab/SmartST/model_saved_rl'):
@@ -118,13 +136,13 @@ if __name__ == '__main__':
 
         R = Variable(torch.zeros(1, 1)).cuda()
         if not done:
-            s = Variable(torch.from_numpy(np.array(s))).view(1, 3, 100, 100).float().cuda()
+            s = Variable(torch.from_numpy(np.array(s))).view(1, 3, 100, 100).float().to(device)
             value, (_, _) = critic((s, (c_hx, c_cx)))
             R = value
         all_values.append(R)
         policy_loss = 0
         value_loss = 0
-        gae = Variable(torch.zeros(1, 1)).cuda()
+        gae = torch.zeros(1, 1).to(device)
         for i in reversed(range(len(all_rewards))):
             R = GAMMA * R + all_rewards[i]
             advantage = R - all_values[i]
@@ -137,6 +155,7 @@ if __name__ == '__main__':
             gae = gae * GAMMA * TAU + delta_t
             policy_loss = policy_loss - all_lprobs[i] * gae - EnCOEF * all_entropies[i]
 
+        print('Value Loss: {} Policy Loss: {}'.format(np.max(value_loss.cpu().data.numpy()), np.max(policy_loss.cpu().data.numpy())))
         actor.zero_grad()
         policy_loss.backward(retain_graph=True)
         a_opt.step()
@@ -149,7 +168,7 @@ if __name__ == '__main__':
         v_loss_tmp.append(value_loss.data)
         reward_record_tmp.append(sum(all_rewards)/all_rewards.__len__())
 
-        if (episode+1) % 200 == 0:
+        if (episode+1) % 20 == 0:
             tmp_v_loss = sum(v_loss_tmp)/v_loss_tmp.__len__()
             tmp_p_loss = sum(p_loss_tmp) / p_loss_tmp.__len__()
             tmp_reward_record = sum(reward_record_tmp)/reward_record_tmp.__len__()
@@ -164,7 +183,7 @@ if __name__ == '__main__':
             reward_record_tmp = []
 
 
-        if (episode + 1) % 50000 == 0:
+        if (episode + 1) % 500 == 0:
             if not os.path.exists(saved_dict):
                 os.mkdir(saved_dict)
             torch.save(actor.state_dict(), os.path.join(os.path.join(os.getcwd(), saved_dict), 'actor_model_{:d}.pth'.format(episode)))
