@@ -93,8 +93,8 @@ class environment:
         self.last_loc = None  # last time location in current game
         self.current_loc = None  # current location in current game
         self.action_space_name = ['up', 'upright', 'right', 'rightdown', 'down', 'downleft', 'left', 'leftup']
-        self.action_space = {'up': [0, 1], 'upright': [1, 1], 'right': [1, 0], 'rightdown': [1, -1], 'down': [0, -1],
-                             'downleft': [-1, -1], 'left': [-1, 0], 'leftup': [-1, 1]}
+        self.action_space = {'up': [-1, 0], 'upright': [-1, 1], 'right': [0, 1], 'rightdown': [1, 1], 'down': [1, 0],
+                             'downleft': [1, -1], 'left': [0, -1], 'leftup': [-1, -1]}
 
         self.max_reward = 1
         self.time_factor = 1
