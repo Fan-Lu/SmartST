@@ -16,9 +16,10 @@ from Agent.ac import Actor, Critic
 
 tra_num = 5
 
-maps = ["map_54.npy", "map_61.npy", "map_62.npy"]
+maps = ["map_61.npy"]
+game = {"map_61.npy":[[100, 300]]}
 
-ENV = environment(maps=maps, map_size=(50, 50), games=3, only_when_success=True, digital=True,
+ENV = environment(maps=maps, map_size=(50, 50), games=game, only_when_success=True, digital=True,
                   reward_type="two", way_back=True, running_reward=True, running_reward_interval=100)
 
 device = torch.device("cuda:0")

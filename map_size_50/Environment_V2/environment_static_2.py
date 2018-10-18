@@ -29,7 +29,7 @@ class environment:
         self.maps = []
         self.map_size = map_size
         for name in sorted(maps):
-            name = os.path.join(os.getcwd(), name)
+            # name = os.path.join(os.getcwd(), name)
             try:
                 tmp = np.load(name)
             except:
