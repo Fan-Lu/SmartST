@@ -63,7 +63,7 @@ if __name__ == '__main__':
     reward_record_tmp = []
 
     while True:
-        s, _, mask = ENV.reset(plot=False)
+        s, _, mask = ENV.reset(plot=True)
         s = normalize(s)
 
 
@@ -104,9 +104,12 @@ if __name__ == '__main__':
             s = s_
             s = normalize(s)
 
+            print(r)
+
             if success:
                 r = f_r
                 success_counter += 1
+                break
 
         R = torch.zeros(1, 1)
         if not success:
