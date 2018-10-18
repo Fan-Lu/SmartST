@@ -201,7 +201,7 @@ class environment:
 
         if plot:
             tmp = self.maps[self.map_index][0].copy()  # the multiply here is a must, or it won't be a deep copy
-            tmp = (4 * tmp).astype(int)
+            tmp = 4 * tmp
             tmp[self.current_game_start[0], self.current_game_start[1]] = 255
             tmp[self.current_game_target[0], self.current_game_target[1]] = 255
             tmp1 = Image.fromarray(tmp).resize((800, 800))
@@ -230,7 +230,7 @@ class environment:
         if self.plot:
             self.canvas.delete(self.canv_img)
             tmp = self.maps[self.map_index][0].copy()
-            tmp = (4 * tmp).astype(int)
+            tmp = 4 * tmp
             tmp[self.current_game_start[0], self.current_game_start[1]] = 255
             tmp[self.current_game_target[0], self.current_game_target[1]] = 255
             tmp[self.current_loc[0], self.current_loc[1]] = 255

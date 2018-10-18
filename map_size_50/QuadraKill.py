@@ -73,27 +73,18 @@ if __name__ == '__main__':
         all_lprobs = []
 
         for step in range(max_times):
-            try:
-                s = torch.from_numpy(np.array(s)).view(1, 1, 50, 50).float()
-            except:
-                print("stop here s")
+            s = torch.from_numpy(np.array(s)).view(1, 1, 50, 50).float()
             value = critic(s)
             probs = actor(s)
 
             mask = torch.from_numpy(mask).view(1, 8)
             masked_probs = probs * mask
 
-            try:
-                action = masked_probs.multinomial(1)  # 这里你没用masked_probs,所以会选出异常的方向
-            except:
-                print("stop here a")
+            action = masked_probs.multinomial(1)  # 这里你没用masked_probs,所以会选出异常的方向
             lporbs = torch.log(probs)
             log_prob = lporbs.gather(1, action)
             entropy = -(log_prob * probs).sum(1)
-            try:
-                real_action = action_dic[int(action.cpu().data.numpy())]
-            except:
-                print("stop here ra")
+            real_action = action_dic[int(action.cpu().data.numpy())]
             s_, _, mask, r, success, f_r, running_mean_reward = ENV.step(real_action)
 
             all_rewards.append(r)
@@ -113,10 +104,7 @@ if __name__ == '__main__':
 
         R = torch.zeros(1, 1)
         if not success:
-            try:
-                s = torch.from_numpy(np.array(s)).view(1, 1, 50, 50).float()
-            except:
-                print("stop here s_")
+            s = torch.from_numpy(np.array(s)).view(1, 1, 50, 50).float()
             value = critic(s)
             R = value
         all_values.append(R)
