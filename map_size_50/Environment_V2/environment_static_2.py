@@ -153,16 +153,26 @@ class environment:
         i = 0
         if self.way_back and self.last_loc is not None:
             for ele in self.action_space_name:
-                temp_loc = self.current_loc + np.array(self.action_space[ele])
-                if temp_loc[0]!=self.last_loc[0] and temp_loc[1]!=self.last_loc[1] and temp_loc[0]<=self.map_size[0] \
-                        and temp_loc[0]>=0 and temp_loc[1]<=self.map_size[1] and temp_loc[1]>=0 and tmp[temp_loc[0], temp_loc[1]] != 0:
+                temp_loc = np.array(self.current_loc) + np.array(self.action_space[ele])
+                if temp_loc[0]<self.map_size[0] and temp_loc[0]>=0 and temp_loc[1]<self.map_size[1] and temp_loc[1]>=0 and tmp[temp_loc[0], temp_loc[1]] != 0 and np.sum(np.abs(temp_loc.astype(float) - np.array(self.last_loc).astype(float)))!=0:
+                  #  (temp_loc[0] != self.last_loc[0] and temp_loc[1] != self.last_loc[1])
                     r_l[i] = 1
                 i += 1
         else:
             for ele in self.action_space_name:
                 temp_loc = self.current_loc + np.array(self.action_space[ele])
+                # s1 = temp_loc[0]<self.map_size[0]
+                # s2 = temp_loc[0]>=0
+                # s3 = temp_loc[1]<self.map_size[1]
+                # s4 = temp_loc[1]>=0
+                # # s5 = tmp[temp_loc[0], temp_loc[1]] != 0
+                # print("I am 2 here")
+                # print(s1)
+                # print(s2)
+                # print(s3)
+                # print(s4)
                 if temp_loc[0]<self.map_size[0] and temp_loc[0]>=0 and temp_loc[1]<self.map_size[1] and temp_loc[1]>=0 \
-                and tmp[temp_loc[0], temp_loc[1]] != 0:
+                    and tmp[temp_loc[0], temp_loc[1]] != 0:
                     r_l[i] = 1
                 i += 1
         return np.array(r_l, dtype='float32')
@@ -187,10 +197,10 @@ class environment:
                 self.map_index = np.random.randint(0, len(self.maps))
                 self.game_index = np.random.randint(0, self.maps[self.map_index][2].shape[0])
 
-        self.current_game_start = self.maps[self.map_index][1][self.game_index][0]
-        self.current_game_target = self.maps[self.map_index][1][self.game_index][1]
+        self.current_game_start = np.array(self.maps[self.map_index][1][self.game_index][0])
+        self.current_game_target = np.array(self.maps[self.map_index][1][self.game_index][1])
         self.last_loc = None
-        self.current_loc = self.maps[self.map_index][1][self.game_index][0]
+        self.current_loc = np.array(self.maps[self.map_index][1][self.game_index][0])
 
         if self.plot and not plot:
             self.root.destroy()
@@ -200,7 +210,7 @@ class environment:
             self.canvas.pack()
 
         if plot:
-            tmp = self.maps[self.map_index][0] * 4
+            tmp = self.maps[self.map_index][0] * 4  # the multiply here is a must, or it won't be a deep copy
             tmp[self.current_game_start[0], self.current_game_start[1]] = 255
             tmp[self.current_game_target[0], self.current_game_target[1]] = 255
             tmp1 = Image.fromarray(tmp).resize((800, 800))
@@ -215,12 +225,14 @@ class environment:
             location_information = [self.figure_location(self.current_loc),
                                     self.figure_location(self.current_game_target)]
 
-        return self.maps[self.map_index][0], location_information, self.moveable_list()
+        tmp_result = self.moveable_list()
+
+        return np.array(self.maps[self.map_index][0]), location_information, tmp_result
 
 
 
     def step(self, move, last_step = False, test = False):
-        self.last_loc = self.current_loc
+        self.last_loc = np.array(self.current_loc)
         self.current_loc += np.array(self.action_space[move])
         time_punish = self.time_punishment(self.current_loc)
 
@@ -243,7 +255,7 @@ class environment:
         if last_step or reach_target and not test:
             final_R = self.final_reward()
             if self.running_reward:
-                running_final_R = self.maps[self.map_index][2][self.game_index, 0]
+                running_final_R = np.array(self.maps[self.map_index][2][self.game_index, 0])
             else:
                 running_final_R = None
         else:
@@ -255,7 +267,9 @@ class environment:
         else:
             location_information = [self.figure_location(self.current_loc), self.figure_location(self.maps[self.map_index][0][self.current_game_target])]
 
-        return self.maps[self.map_index][0], location_information, self.moveable_list(), -time_punish, reach_target, final_R, running_final_R
+        tmp_result = self.moveable_list()
+
+        return np.array(self.maps[self.map_index][0]), location_information, tmp_result, -time_punish, reach_target, final_R, running_final_R
 
 
 

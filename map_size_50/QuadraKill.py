@@ -17,10 +17,10 @@ from Agent.ac import Actor, Critic
 tra_num = 5
 
 maps = ["map_61.npy"]
-game = {"map_61.npy":[[100, 300]]}
+game = {"map_61.npy": [[100, 300]]}
 
 ENV = environment(maps=maps, map_size=(50, 50), games=game, only_when_success=True, digital=True,
-                  reward_type="two", way_back=True, running_reward=True, running_reward_interval=100)
+                  reward_type="two", way_back=False, running_reward=True, running_reward_interval=100)
 
 device = torch.device("cuda:0")
 actor = Actor(A_DIM=8)
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     reward_record_tmp = []
 
     while True:
-        s, _, mask = ENV.reset(plot=True)
+        s, _, mask = ENV.reset(plot=False)
         s = normalize(s)
 
 
@@ -84,7 +84,7 @@ if __name__ == '__main__':
             masked_probs = probs * mask
 
             try:
-                action = probs.multinomial(1)
+                action = masked_probs.multinomial(1)  # 这里你没用masked_probs,所以会选出异常的方向
             except:
                 print("stop here a")
             lporbs = torch.log(probs)
