@@ -100,7 +100,7 @@ class ResNet(nn.Module):
 class Network(nn.Module):
     def __init__(self):
         super(Network, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=2, out_channels=8, kernel_size=3, stride=2)
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=8, kernel_size=3, stride=2)
         self.conv2 = nn.Conv2d(in_channels=8, out_channels=16, kernel_size=3, stride=2)
         self.conv3 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3)
         self.conv4 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3)
@@ -135,57 +135,44 @@ class Network(nn.Module):
 
 
 class Actor(nn.Module):
-    def __init__(self, S_DIM=3, A_DIM=4):
+    def __init__(self,A_DIM=4):
         super(Actor, self).__init__()
 
-        # self.a_resnet = ResNet(BasicBlock, S_DIM, [3, 3, 3, 3])
         self.network = Network()
-        self.a_lstm = nn.LSTMCell(128, 64)
-        self.actor_linear = nn.Linear(64, A_DIM)
+        self.actor_linear = nn.Linear(128, A_DIM)
 
     def init_parameter(self):
         self.network.init_parameter()
-        nn.init.xavier_normal_(self.a_lstm.weight_hh)
-        nn.init.xavier_normal_(self.a_lstm.weight_ih)
         nn.init.normal_(self.actor_linear.weight)
 
     def forward(self, input):
-        state, (hx, cx) = input
-        # state = self.a_resnet(state)
+        state = input
         state = self.network(state)
-        hx, cx = self.a_lstm(state, (hx, cx))
 
-        probs = F.softmax(self.actor_linear(hx))
+        probs = F.softmax(self.actor_linear(state))
 
-        return probs, (hx, cx)
+        return probs
 
 
 class Critic(nn.Module):
-    def __init__(self, S_DIM=3):
+    def __init__(self):
         super(Critic, self).__init__()
 
-        # self.c_resnet = ResNet(BasicBlock, S_DIM, [3, 3, 3, 3])
         self.network = Network()
-        self.c_lstm = nn.LSTMCell(128, 64)
-        self.critic_linear = nn.Linear(64, 1)
+        self.critic_linear = nn.Linear(128, 1)
         self.init_parameter()
 
     def init_parameter(self):
         self.network.init_parameter()
-        nn.init.xavier_normal_(self.c_lstm.weight_hh)
-        nn.init.xavier_normal_(self.c_lstm.weight_ih)
         nn.init.normal_(self.critic_linear.weight)
 
     def forward(self, input):
-        state, (hx, cx) = input
-        # state = self.c_resnet(state)
+        state = input
         state = self.network(state)
-        hx, cx = self.c_lstm(state, (hx, cx))
-        state = hx
 
         value = self.critic_linear(state)
 
-        return value, (hx, cx)
+        return value
 
 
 if __name__ == '__main__':
