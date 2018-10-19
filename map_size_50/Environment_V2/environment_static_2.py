@@ -244,7 +244,7 @@ class environment:
         if reach_target and self.only_when_success:
             self.success_flag = True
 
-        if reach_target and not test:
+        if (reach_target or last_step) and not test:
             final_R = self.final_reward()
             if self.running_reward:
                 running_final_R = np.array(self.maps[self.map_index][2][self.game_index, 0])
