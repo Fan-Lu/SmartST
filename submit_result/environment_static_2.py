@@ -97,13 +97,13 @@ class environment:
                              'downleft': np.array([1, -1]), 'left': np.array([0, -1]), 'leftup': np.array([-1, -1])}
 
         self.max_reward = 1
-        self.time_factor = 0.1
-        self.distance_factor = 0.5
+        self.time_factor = 0.4
+        self.distance_factor = 0.1
 
         self.max_not_success = 30
         self.success_counter = 0
 
-    def figure_location(self, location, width = 5):
+    def figure_location(self, location, width=5):
         tmp = np.zeros([self.map_size[0]+width*2, self.map_size[1]+width*2])
         cen1 = location[0] + width
         cen2 = location[1] + width
@@ -152,6 +152,7 @@ class environment:
         dis = np.sqrt(np.square(self.current_game_start[0] - self.current_game_target[0]) + np.square(self.current_game_start[1] - self.current_game_target[1]))
         after = np.sqrt(np.square(location[0] - self.current_game_target[0]) + np.square(location[1] - self.current_game_target[1]))
         dis_reward = dis - after
+        print('time reward is {0}, dis reward is {1}'.format(self.time_factor * 50.0 / speed, - dis_reward * self.distance_factor))
         return self.time_factor * 50.0 / speed - dis_reward * self.distance_factor
 
     def moveable_list(self):

@@ -8,13 +8,14 @@ use_cuda = False  # set to True if training with GPU
 maps = ["map_62.npy"]
 games = {"map_62.npy": [[102, 292]]}
 use_running_reward = True
+base_interval = 8
 
 ENV = environment(maps=maps, map_size=(50, 50), games=games, only_when_success=True, digital=False, reward_type="one", way_back=False, running_reward=use_running_reward,
-                 running_reward_interval=10)
+                 running_reward_interval=base_interval)
 
 action_dic = ['up', 'upright', 'right', 'rightdown', 'down', 'downleft', 'left', 'leftup']
 GAMMA = 0.99
-max_time = 30
+max_time = 100  # maximum steps
 
 # args = GetConfiguration()
 # args.model_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),os.path.pardir)) + '/SmartST/model_saved_rl/'
@@ -25,7 +26,7 @@ Agent = PolicyGradient(A_DIM=8, lr=0.001, reward_decay=GAMMA)
 if __name__ == '__main__':
 
     success_counter = 0
-    max_episode = 100
+    max_episode = 200
     Agent.build_net()
 
     for episode in range(max_episode):
@@ -51,13 +52,14 @@ if __name__ == '__main__':
                 next_state, location_information, mask, r, success, f_r, running_mean_reward = ENV.step(real_action, last_step=True)
             else:
                 next_state, location_information, mask, r, success, f_r, running_mean_reward = ENV.step(real_action)
+                print("Unit step reward is {0}".format(r))
+
 
             if (step == max_time - 1) or success:
                 if running_mean_reward and use_running_reward:
                     final_reward = f_r - running_mean_reward
                 else:
                     final_reward = f_r
-
 
             reward_record.append(r)
             action_record.append(action)

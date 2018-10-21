@@ -116,8 +116,14 @@ if __name__ == '__main__':
 
             mask = torch.from_numpy(mask).view(1, 8)
             masked_probs = probs * mask
+            masked_probs = torch.abs(masked_probs)
+
+            if torch.min(masked_probs) < 0:
+                print(masked_probs)
+                raise NameError("negative value")
 
             action = masked_probs.multinomial(1)  # 这里你没用masked_probs,所以会选出异常的方向
+
             lporbs = torch.log(probs)
             log_prob = lporbs.gather(1, action)
             entropy = -(log_prob * probs).sum(1)
